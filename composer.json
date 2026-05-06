@@ -1,0 +1,12 @@
+{
+    "name": "csit226/php-login",
+    "description": "PHP Login Web Server",
+    "require": {
+        "php": ">=8.2"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    }
+}
