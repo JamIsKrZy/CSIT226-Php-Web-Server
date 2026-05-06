@@ -104,11 +104,8 @@ docker-compose logs -f app
 # Stop services
 docker-compose down
 
-# Stop and remove volumes
-docker-compose down -v
-
-# Rebuild containers
-docker-compose up -d --build
+# Remove volums and Rebuild
+docker compose down && docker compose up -d --build
 
 # Access MySQL container
 docker exec -it mysql-container mysql -u myuser -p mydb
@@ -121,26 +118,33 @@ docker exec mysql-container mysql -u myuser -pmypassword mydb -e "SELECT * FROM 
 
 # Check PHP logs
 docker-compose logs -f app
+
+# Setup migration and seed database
+docker exec php-app bash /var/www/html/database/setup.sh
 ```
+
 
 ## Database Setup
 
 ### Manual Database Setup (if setup.sh doesn't work)
 
 1. Connect to MySQL container:
+    #### Connect as regular user
    ```bash
    docker exec -it mysql-container mysql -u myuser -pmypassword mydb
    ```
 
+    #### Connect as admin
+    ```bash
+    docker exec -it mysql-container mysql -u root -p 
+    ```
+
+
 2. Run the migration:
-   ```sql
-   SOURCE /var/www/html/database/migration/001_create_users_table.sql;
+   ```bash
+   docker exec php-app bash /var/www/html/database/setup.sh;
    ```
 
-3. Run the seeds:
-   ```sql
-   SOURCE /var/www/html/database/seeds/users_seed.sql;
-   ```
 
 ## API Documentation
 
@@ -182,11 +186,11 @@ Methods:
 
 1. ✅ Database Setup - DONE
 2. ✅ Authentication - DONE (using bcrypt)
-3. Add dashboard page after login
+<!-- 3. Add dashboard page after login
 4. Add user registration
 5. Add password reset functionality
 6. Add user profile editing
-7. Implement role-based access control
+7. Implement role-based access control -->
 
 ## Troubleshooting
 
