@@ -35,6 +35,18 @@ class UserController {
     }
 
     /**
+     * Show plot schedule page
+     */
+    public function plotSchedule() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/plot-schedule.php';
+    }
+
+    /**
      * Get user by ID
      */
     public function getUser($id) {

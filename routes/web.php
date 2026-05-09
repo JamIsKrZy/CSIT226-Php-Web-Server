@@ -14,6 +14,7 @@ $router->post('/signup', [LoginController::class, 'handleSignup']);
 // Users routes
 $router->get('/users', [UserController::class, 'listUsers']);
 $router->get('/dashboard', [UserController::class, 'dashboard']);
+$router->get('/plot-schedule', [UserController::class, 'plotSchedule']);
 
 // Home route
 $router->get('/', [LoginController::class, 'showLogin']);
