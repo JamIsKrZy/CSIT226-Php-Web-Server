@@ -14,6 +14,4 @@ $router->post('/signup', [LoginController::class, 'handleSignup']);
 $router->get('/users', [UserController::class, 'listUsers']);
 
 // Home route
-$router->get('/', function() {
-    echo "Welcome to the login system! <a href='/login'>Login</a> | <a href='/signup'>Sign Up</a> | <a href='/users'>View Users</a>";
-});
+$router->get('/', [LoginController::class, 'showLogin']);
