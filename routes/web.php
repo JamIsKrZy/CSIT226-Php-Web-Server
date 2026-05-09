@@ -12,6 +12,7 @@ $router->post('/signup', [LoginController::class, 'handleSignup']);
 
 // Users routes
 $router->get('/users', [UserController::class, 'listUsers']);
+$router->get('/dashboard', [UserController::class, 'dashboard']);
 
 // Home route
 $router->get('/', [LoginController::class, 'showLogin']);

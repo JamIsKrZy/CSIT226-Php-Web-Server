@@ -23,6 +23,18 @@ class UserController {
     }
 
     /**
+     * Show student dashboard
+     */
+    public function dashboard() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/dashboard.php';
+    }
+
+    /**
      * Get user by ID
      */
     public function getUser($id) {

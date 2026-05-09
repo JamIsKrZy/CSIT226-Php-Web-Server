@@ -43,7 +43,7 @@ class LoginController {
                 'first_name' => $user['first_name']
             ];
             $_SESSION['success'] = 'Login successful!';
-            header('Location: /users');
+            header('Location: /dashboard');
             exit;
         } else {
             $_SESSION['error'] = 'Invalid email or password';
