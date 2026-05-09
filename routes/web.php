@@ -5,6 +5,7 @@ use App\Controllers\UserController;
 // Login routes
 $router->get('/login', [LoginController::class, 'showLogin']);
 $router->post('/login', [LoginController::class, 'handleLogin']);
+$router->get('/logout', [LoginController::class, 'logout']);
 
 // Signup routes
 $router->get('/signup', [LoginController::class, 'showSignup']);

@@ -23,7 +23,7 @@
         <nav>
             <a href="/dashboard" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
             <a href="#"><i class="fa-solid fa-calendar-days"></i> Plot Schedule</a>
-            <a href="/login"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
         </nav>
     </header>
 
