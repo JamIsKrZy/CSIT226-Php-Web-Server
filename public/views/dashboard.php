@@ -3,127 +3,186 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - CIT University Enrollment System</title>
-    <link rel="stylesheet" href="/assets/dashboard.css">
+    <title>Pre-Enrollment Dashboard - CIT University</title>
+    <link rel="stylesheet" href="/assets/main.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <div class="header-container">
-            <div class="logo-section">
-                <img src="/assets/images/logo.png" alt="CIT University Logo">
-                <div class="logo-text">
-                    <h1>CIT University</h1>
-                    <p>Enrollment System</p>
+    <?php $currentPage = 'dashboard'; include 'partials/sidebar.php'; ?>
+
+    <main class="main-container">
+        <?php include 'partials/header.php'; ?>
+
+        <div class="content-wrapper">
+            <div class="page-header">
+                <h2>Pre-Enrollment Dashboard</h2>
+                <p>1st Semester, AY 2026-2027</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <i class="fa-solid fa-book-open"></i>
+                        <span>Planned Units</span>
+                    </div>
+                    <div class="stat-value">15 / 24</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" style="width: 62.5%;"></div>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <i class="fa-solid fa-fire"></i>
+                        <span>High Demand Sections</span>
+                    </div>
+                    <div class="stat-value">2 <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-medium);">out of 5 planned</span></div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-card-header">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Enrollment Readiness</span>
+                    </div>
+                    <div class="stat-value">75%</div>
+                    <p style="font-size: 0.8rem; color: var(--text-medium);">Good to proceed</p>
                 </div>
             </div>
-            <nav>
-                <a href="/dashboard" class="active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
-                <a href="/plot-schedule"><i class="fa-solid fa-calendar-days"></i> Plot Schedule</a>
-                <a href="/logout"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
-            </nav>
+
+            <div class="dashboard-main-grid">
+                <div class="left-col">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Selected Sections</h3>
+                            <span style="font-size: 0.8rem; color: var(--text-medium);">5 courses</span>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div class="scrollable-card" style="max-height: 400px;">
+                                <table class="data-table">
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <div class="section-row-info">
+                                                    <span class="section-row-title">CSIT122 — Intermediate Programming II</span>
+                                                    <span class="section-row-subtitle">Section F1  •  MWF 8:00-10:00 AM  •  Room 301</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <span class="badge badge-high">High</span>
+                                            </td>
+                                            <td style="text-align: right; font-weight: 600;">3 units</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="section-row-info">
+                                                    <span class="section-row-title">CSIT228 — Database Management Systems</span>
+                                                    <span class="section-row-subtitle">Section F1  •  TTH 1:00-2:30 PM  •  Room 205</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <span class="badge badge-high">High</span>
+                                            </td>
+                                            <td style="text-align: right; font-weight: 600;">3 units</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="section-row-info">
+                                                    <span class="section-row-title">MATH215 — Discrete Mathematics</span>
+                                                    <span class="section-row-subtitle">Section F2  •  MWF 10:00-11:00 AM  •  Room 108</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <span class="badge badge-moderate">Moderate</span>
+                                            </td>
+                                            <td style="text-align: right; font-weight: 600;">3 units</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="section-row-info">
+                                                    <span class="section-row-title">CSI1221 — Computer Architecture</span>
+                                                    <span class="section-row-subtitle">Section F1  •  TTH 10:00-11:30 AM  •  Room 412</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <span class="badge badge-low">Low</span>
+                                            </td>
+                                            <td style="text-align: right; font-weight: 600;">3 units</td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <div class="section-row-info">
+                                                    <span class="section-row-title">ENGL201 — Technical Writing</span>
+                                                    <span class="section-row-subtitle">Section F3  •  MW 2:00-3:30 PM  •  Room 203</span>
+                                                </div>
+                                            </td>
+                                            <td style="text-align: right;">
+                                                <span class="badge badge-moderate">Moderate</span>
+                                            </td>
+                                            <td style="text-align: right; font-weight: 600;">3 units</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-bell" style="color: var(--primary-maroon); margin-right: 8px;"></i> Enrollment Updates</h3>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div class="scrollable-card" style="max-height: 400px; padding: 0 24px;">
+                                <div class="update-item">
+                                    <div class="update-icon" style="background: #fdf2f2; color: #d63031;">
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                    </div>
+                                    <div class="update-content">
+                                        <h4>CSIT122 F1</h4>
+                                        <p>Section F1 is now at full capacity (40/40 students)</p>
+                                        <span class="update-time">2 hours ago</span>
+                                    </div>
+                                </div>
+                                <div class="update-item">
+                                    <div class="update-icon" style="background: #e8f8f5; color: #16a085;">
+                                        <i class="fa-solid fa-circle-check"></i>
+                                    </div>
+                                    <div class="update-content">
+                                        <h4>CSIT228 F3</h4>
+                                        <p>New section F3 opened - TTH 3:00-4:30 PM</p>
+                                        <span class="update-time">5 hours ago</span>
+                                    </div>
+                                </div>
+                                <div class="update-item">
+                                    <div class="update-icon" style="background: #fff9e6; color: #d35400;">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                    </div>
+                                    <div class="update-content">
+                                        <h4>MATH215 F2</h4>
+                                        <p>Room changed from 108 to 110</p>
+                                        <span class="update-time">1 day ago</span>
+                                    </div>
+                                </div>
+                                <div class="update-item">
+                                    <div class="update-icon" style="background: #eef2ff; color: #4f46e5;">
+                                        <i class="fa-solid fa-info-circle"></i>
+                                    </div>
+                                    <div class="update-content">
+                                        <h4>Department Notice</h4>
+                                        <p>Pre-enrollment deadline extended to May 15</p>
+                                        <span class="update-time">2 days ago</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </header>
-
-    <div class="main-wrapper">
-        <section class="title-section">
-            <div>
-                <h2>Welcome back, <?php echo htmlspecialchars($_SESSION['user']['first_name'] ?? 'Student'); ?>!</h2>
-                <p>Here's your enrollment overview for Academic Year 2026-2027</p>
-            </div>
-        </section>
-
-        <section class="stats-grid">
-            <div class="stat-card maroon">
-                <div class="stat-info">
-                    <h4>Enrolled Units</h4>
-                    <div class="value">18</div>
-                </div>
-                <i class="fa-solid fa-book-open fa-2x"></i>
-            </div>
-
-            <div class="stat-card yellow">
-                <div class="stat-info">
-                    <h4>Pending Subjects</h4>
-                    <div class="value">3</div>
-                </div>
-                <i class="fa-solid fa-clock fa-2x"></i>
-            </div>
-
-            <div class="stat-card maroon">
-                <div class="stat-info">
-                    <h4>Total Progress</h4>
-                    <div class="value">75%</div>
-                </div>
-                <i class="fa-solid fa-chart-line fa-2x"></i>
-            </div>
-        </section>
-
-        <div class="dashboard-grid">
-            <div class="left-col">
-                <section class="card">
-                    <h3><i class="fa-solid fa-calendar-check"></i> Upcoming Classes</h3>
-                    
-                    <div class="subject-item">
-                        <div class="subject-details">
-                            <div class="subject-name">Data Structures <span class="subject-code">CS201</span></div>
-                            <div class="subject-info-line"><i class="fa-regular fa-clock"></i> 9:00 AM - 10:30 AM</div>
-                            <div class="subject-info-line"><i class="fa-solid fa-user-tie"></i> Dr. Maria Santos</div>
-                            <div class="subject-info-line"><i class="fa-solid fa-location-dot"></i> Room 301</div>
-                        </div>
-                    </div>
-
-                    <div class="subject-item">
-                        <div class="subject-details">
-                            <div class="subject-name">Database Systems <span class="subject-code">CS202</span></div>
-                            <div class="subject-info-line"><i class="fa-regular fa-clock"></i> 1:00 PM - 2:30 PM</div>
-                            <div class="subject-info-line"><i class="fa-solid fa-user-tie"></i> Prof. Juan Dela Cruz</div>
-                            <div class="subject-info-line"><i class="fa-solid fa-location-dot"></i> Room 205</div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-
-            <div class="right-col">
-                <section class="card">
-                    <h3><i class="fa-solid fa-bullhorn"></i> Announcements</h3>
-                    
-                    <div class="announcement-item">
-                        <div class="announcement-header">
-                            <h4>Pre-Enrollment Extended</h4>
-                            <span class="date">May 8</span>
-                        </div>
-                        <p>Deadline moved to May 15, 2026.</p>
-                    </div>
-
-                    <div class="announcement-item">
-                        <div class="announcement-header">
-                            <h4>System Maintenance</h4>
-                            <span class="date">May 3</span>
-                        </div>
-                        <p>Scheduled for May 10, 2:00 AM.</p>
-                    </div>
-                </section>
-
-                <section class="summary-card">
-                    <h3>Quick Actions</h3>
-                    <div class="summary-row">
-                        <span>Enrollment Form</span>
-                        <a href="#" style="color: var(--accent-yellow); text-decoration: none;">Download</a>
-                    </div>
-                    <div class="summary-row">
-                        <span>Academic Calendar</span>
-                        <a href="#" style="color: var(--accent-yellow); text-decoration: none;">View</a>
-                    </div>
-                    <div class="summary-row total">
-                        <a href="#" class="btn-add" style="background: var(--accent-yellow); color: var(--primary-maroon); width: 100%; justify-content: center; margin-top: 10px;">Contact Advisor</a>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
+    </main>
 </body>
 </html>
