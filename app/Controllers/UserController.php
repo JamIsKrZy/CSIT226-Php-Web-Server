@@ -35,15 +35,27 @@ class UserController {
     }
 
     /**
-     * Show plot schedule page
+     * Show section demand page
      */
-    public function plotSchedule() {
+    public function sectionDemand() {
         // Check if user is logged in
         if (!isset($_SESSION['user'])) {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/plot-schedule.php';
+        return require __DIR__ . '/../../public/views/section-demand.php';
+    }
+
+    /**
+     * Show enrollment plan page
+     */
+    public function enrollmentPlan() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/enrollment-plan.php';
     }
 
     /**
