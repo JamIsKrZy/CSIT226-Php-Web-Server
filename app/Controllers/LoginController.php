@@ -29,7 +29,7 @@ class LoginController {
         // Basic validation
         if (empty($email) || empty($password)) {
             $_SESSION['error'] = 'Email and password are required';
-            header('Location: /login');
+            header('Location: /');
             exit;
         }
 
@@ -43,11 +43,11 @@ class LoginController {
                 'first_name' => $user['first_name']
             ];
             $_SESSION['success'] = 'Login successful!';
-            header('Location: /users');
+            header('Location: /dashboard');
             exit;
         } else {
             $_SESSION['error'] = 'Invalid email or password';
-            header('Location: /login');
+            header('Location: /');
             exit;
         }
     }
@@ -113,12 +113,19 @@ class LoginController {
         try {
             $this->userController->createUser($email, $password, $first_name, $last_name);
             $_SESSION['success'] = 'Account created successfully! Please login with your credentials.';
-            header('Location: /login');
+            header('Location: /');
             exit;
         } catch (\Exception $e) {
             $_SESSION['error'] = 'Error creating account. Please try again.';
             header('Location: /signup');
             exit;
         }
+    }
+
+    // Handle logout
+    public function logout() {
+        session_destroy();
+        header('Location: /');
+        exit;
     }
 }
