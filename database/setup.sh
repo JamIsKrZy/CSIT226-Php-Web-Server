@@ -22,8 +22,8 @@ echo "Connecting to MySQL at $DB_HOST..."
 # Run migrations
 echo ""
 echo "Running migrations..."
-# source migration/001_create_users_table.sh
 MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/migration/001_create_users_table.sql
+MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/migration/002_update_schema.sql
 
 if [ $? -eq 0 ]; then
     echo "✓ Migrations completed successfully"
@@ -35,9 +35,8 @@ fi
 # Run seeds
 echo ""
 echo "Running seeds..."
-chmod +x database/seeds/seed_users.sh
-source database/seeds/seed_users.sh
 # MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/users_seed.sql
+MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/admin_and_updates_seed.sql
 
 if [ $? -eq 0 ]; then
     echo "✓ Seeds completed successfully"

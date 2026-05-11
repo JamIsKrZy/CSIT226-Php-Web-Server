@@ -12,7 +12,12 @@ class LoginController {
     
     // Show the login form
     public function showLogin() {
-        return require __DIR__ . '/../../public/views/login.php';
+        return require __DIR__ . '/../../public/views/auth/login.php';
+    }
+
+    // Show the admin login form
+    public function showAdminLogin() {
+        return require __DIR__ . '/../../public/views/admin/admin-login.php';
     }
 
     // Handle login form submission
@@ -40,7 +45,9 @@ class LoginController {
             $_SESSION['user'] = [
                 'id' => $user['id'],
                 'email' => $user['email'],
-                'first_name' => $user['first_name']
+                'first_name' => $user['first_name'],
+                'last_name' => $user['last_name'] ?? '',
+                'role' => $user['role'] ?? 'student'
             ];
             $_SESSION['success'] = 'Login successful!';
             header('Location: /dashboard');
@@ -52,9 +59,47 @@ class LoginController {
         }
     }
 
+    // Handle admin login form submission
+    public function handleAdminLogin() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo "Method not allowed";
+            return;
+        }
+
+        $email = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
+
+        if (empty($email) || empty($password)) {
+            $_SESSION['error'] = 'Admin credentials are required';
+            header('Location: /admin/login');
+            exit;
+        }
+
+        // Validate against database
+        $user = $this->userController->login($email, $password);
+        
+        if ($user && ($user['role'] ?? 'student') === 'admin') {
+            $_SESSION['user'] = [
+                'id' => $user['id'],
+                'email' => $user['email'],
+                'first_name' => $user['first_name'],
+                'last_name' => $user['last_name'] ?? '',
+                'role' => 'admin'
+            ];
+            $_SESSION['success'] = 'Admin login successful!';
+            header('Location: /dashboard');
+            exit;
+        } else {
+            $_SESSION['error'] = 'Invalid admin credentials or insufficient privileges';
+            header('Location: /admin/login');
+            exit;
+        }
+    }
+
     // Show the signup form
     public function showSignup() {
-        return require __DIR__ . '/../../public/views/signup.php';
+        return require __DIR__ . '/../../public/views/auth/signup.php';
     }
 
     // Handle signup form submission
