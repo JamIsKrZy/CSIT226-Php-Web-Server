@@ -34,7 +34,7 @@ A modern, responsive, and secure enrollment management system built with PHP, My
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@cit.edu` | `password123` |
+| **Admin** | `m.santos@cit.edu` | `password` |
 | **Student** | `demo@example.com` | `password123` |
 
 ---
