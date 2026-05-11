@@ -12,7 +12,7 @@ class LoginController {
     
     // Show the login form
     public function showLogin() {
-        return require __DIR__ . '/../../public/views/login.php';
+        return require __DIR__ . '/../../public/views/auth/login.php';
     }
 
     // Handle login form submission

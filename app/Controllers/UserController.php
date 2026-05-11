@@ -31,7 +31,7 @@ class UserController {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/dashboard.php';
+        return require __DIR__ . '/../../public/views/student/dashboard.php';
     }
 
     /**
@@ -43,7 +43,7 @@ class UserController {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/section-demand.php';
+        return require __DIR__ . '/../../public/views/student/section-demand.php';
     }
 
     /**
@@ -55,7 +55,7 @@ class UserController {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/enrollment-plan.php';
+        return require __DIR__ . '/../../public/views/student/enrollment-plan.php';
     }
 
     /**
@@ -67,7 +67,7 @@ class UserController {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/alternative-sections.php';
+        return require __DIR__ . '/../../public/views/student/alternative-sections.php';
     }
 
     /**
@@ -79,7 +79,7 @@ class UserController {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/enrollment-updates.php';
+        return require __DIR__ . '/../../public/views/student/enrollment-updates.php';
     }
 
     /**
@@ -91,7 +91,7 @@ class UserController {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/change-password.php';
+        return require __DIR__ . '/../../public/views/student/change-password.php';
     }
 
     /**
