@@ -136,14 +136,14 @@ class UserController {
      * Get user by ID
      */
     public function getUser($id) {
-        return $this->db->queryOne('SELECT * FROM users WHERE id = ?', [$id]);
+        return $this->db->queryOne('SELECT * FROM User WHERE userID = ?', [$id]);
     }
 
     /**
      * Verify login credentials
      */
     public function login($email, $password) {
-        $user = $this->db->queryOne('SELECT id, email, password, first_name FROM users WHERE email = ?', [$email]);
+        $user = $this->db->queryOne('SELECT userID as id, email, password, firstName as first_name FROM User WHERE email = ?', [$email]);
         
         if ($user && password_verify($password, $user['password'])) {
             return $user;
@@ -159,8 +159,8 @@ class UserController {
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         
         return $this->db->execute(
-            'INSERT INTO users (email, password, firstName, lastName) VALUES (?, ?, ?, ?)',
-            [$email, $hashedPassword, $first_name, $last_name]
+            'INSERT INTO User (email, password, firstName, lastName, userType, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [$email, $hashedPassword, $first_name, $last_name, 'student', 'active']
         );
     }
 
@@ -169,7 +169,7 @@ class UserController {
      */
     public function updateUser($id, $first_name, $last_name) {
         return $this->db->execute(
-            'UPDATE users SET firstName = ?, lastName = ? WHERE userID = ?',
+            'UPDATE User SET firstName = ?, lastName = ? WHERE userID = ?',
             [$first_name, $last_name, $id]
         );
     }
@@ -178,6 +178,6 @@ class UserController {
      * Delete user
      */
     public function deleteUser($id) {
-        return $this->db->execute('DELETE FROM users WHERE userID = ?', [$id]);
+        return $this->db->execute('DELETE FROM User WHERE userID = ?', [$id]);
     }
 }

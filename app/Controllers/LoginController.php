@@ -101,7 +101,7 @@ class LoginController {
 
         // Check if email already exists
         $db = new Database();
-        $existingUser = $db->queryOne('SELECT id FROM users WHERE email = ?', [$email]);
+        $existingUser = $db->queryOne('SELECT userID FROM User WHERE email = ?', [$email]);
         
         if ($existingUser) {
             $_SESSION['error'] = 'Email already registered. Please login or use a different email.';

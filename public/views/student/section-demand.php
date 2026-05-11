@@ -28,7 +28,7 @@
                         <i class="fa-solid fa-layer-group"></i>
                         <span>Total Sections</span>
                     </div>
-                    <div class="stat-value">27</div>
+                    <div class="stat-value" id="total-sections">0</div>
                     <p style="font-size: 0.8rem; color: var(--text-medium);">across all courses</p>
                 </div>
 
@@ -37,7 +37,7 @@
                         <i class="fa-solid fa-chart-line"></i>
                         <span>High Demand</span>
                     </div>
-                    <div class="stat-value" style="color: var(--status-danger);">8</div>
+                    <div class="stat-value" style="color: var(--status-danger);" id="high-demand">0</div>
                     <p style="font-size: 0.8rem; color: var(--text-medium);">sections nearing capacity</p>
                 </div>
 
@@ -46,7 +46,7 @@
                         <i class="fa-solid fa-users-viewfinder"></i>
                         <span>Low Demand</span>
                     </div>
-                    <div class="stat-value" style="color: var(--status-success);">12</div>
+                    <div class="stat-value" style="color: var(--status-success);" id="low-demand">0</div>
                     <p style="font-size: 0.8rem; color: var(--text-medium);">sections with availability</p>
                 </div>
             </div>
@@ -56,129 +56,8 @@
                     <h3>Section Comparison by Course</h3>
                 </div>
                 <div class="card-body">
-                    <div class="scrollable-card" style="max-height: 600px;">
-                        <?php 
-                        $courses = [
-                            ['code' => 'CSIT122', 'title' => 'Intermediate Programming II', 'sections' => 3],
-                            ['code' => 'CSIT228', 'title' => 'Database Management Systems', 'sections' => 3],
-                            ['code' => 'MATH136', 'title' => 'Differential and Integral Calculus', 'sections' => 3],
-                            ['code' => 'CS132', 'title' => 'Introduction to Computer Systems', 'sections' => 3],
-                            ['code' => 'CSIT112', 'title' => 'Discrete Structures 1', 'sections' => 3],
-                            ['code' => 'CSIT201', 'title' => 'Platform-based Development 2 (Web)', 'sections' => 3],
-                            ['code' => 'HUM031', 'title' => 'Art Appreciation', 'sections' => 3],
-                            ['code' => 'NSTP112', 'title' => 'National Service Training Program 2', 'sections' => 3],
-                            ['code' => 'PE104', 'title' => 'Fitness Exercises / PATHFit 2', 'sections' => 3],
-                        ];
-
-                        foreach ($courses as $index => $course): ?>
-                        <div class="course-accordion">
-                            <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
-                                <div>
-                                    <h4><?php echo $course['code']; ?> - <?php echo $course['title']; ?></h4>
-                                    <span><?php echo $course['sections']; ?> sections available</span>
-                                </div>
-                                <i class="fa-solid fa-chevron-down"></i>
-                            </div>
-                            <div class="accordion-content">
-                                <!-- Section F1 -->
-                                <div class="section-demand-card">
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                                        <div>
-                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                                <span style="font-weight: 700; font-size: 1rem;">Section F1</span>
-                                                <span class="badge badge-high">HIGH</span>
-                                            </div>
-                                            <div style="font-size: 0.85rem; color: var(--text-medium);">
-                                                MWF 9:00-10:00 AM<br>Room 301
-                                            </div>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div style="font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-users"></i> 38/40</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-medium);">95% filled</div>
-                                        </div>
-                                    </div>
-                                    <div class="progress-container">
-                                        <div class="progress-label"><span>Enrolled</span><span>38 / 40</span></div>
-                                        <div class="progress-bar-wrapper">
-                                            <div class="progress-bar red" style="width: 95%;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="progress-container">
-                                        <div class="progress-label"><span>Estimated Interest</span><span>52 students</span></div>
-                                        <div class="progress-bar-wrapper">
-                                            <div class="progress-bar maroon" style="width: 100%;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="demand-alert">
-                                        <i class="fa-solid fa-triangle-exclamation"></i>
-                                        Interest exceeds capacity by 12 students
-                                    </div>
-                                </div>
-
-                                <!-- Section F2 -->
-                                <div class="section-demand-card">
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                                        <div>
-                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                                <span style="font-weight: 700; font-size: 1rem;">Section F2</span>
-                                                <span class="badge badge-moderate">MODERATE</span>
-                                            </div>
-                                            <div style="font-size: 0.85rem; color: var(--text-medium);">
-                                                TTh 1:00-2:30 PM<br>Room 305
-                                            </div>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div style="font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-users"></i> 22/40</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-medium);">55% filled</div>
-                                        </div>
-                                    </div>
-                                    <div class="progress-container">
-                                        <div class="progress-label"><span>Enrolled</span><span>22 / 40</span></div>
-                                        <div class="progress-bar-wrapper">
-                                            <div class="progress-bar green" style="width: 55%;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="progress-container">
-                                        <div class="progress-label"><span>Estimated Interest</span><span>28 students</span></div>
-                                        <div class="progress-bar-wrapper">
-                                            <div class="progress-bar maroon" style="width: 70%;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Section F3 -->
-                                <div class="section-demand-card">
-                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                                        <div>
-                                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                                <span style="font-weight: 700; font-size: 1rem;">Section F3</span>
-                                                <span class="badge badge-low">LOW</span>
-                                            </div>
-                                            <div style="font-size: 0.85rem; color: var(--text-medium);">
-                                                Sat 8:00-11:00 AM<br>Room 301
-                                            </div>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div style="font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-users"></i> 12/35</div>
-                                            <div style="font-size: 0.75rem; color: var(--text-medium);">34% filled</div>
-                                        </div>
-                                    </div>
-                                    <div class="progress-container">
-                                        <div class="progress-label"><span>Enrolled</span><span>12 / 35</span></div>
-                                        <div class="progress-bar-wrapper">
-                                            <div class="progress-bar green" style="width: 34%;"></div>
-                                        </div>
-                                    </div>
-                                    <div class="progress-container">
-                                        <div class="progress-label"><span>Estimated Interest</span><span>15 students</span></div>
-                                        <div class="progress-bar-wrapper">
-                                            <div class="progress-bar maroon" style="width: 42%;"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
+                    <div class="scrollable-card" style="max-height: 600px;" id="course-accordion-container">
+                        <!-- Loaded by JavaScript -->
                     </div>
                 </div>
             </div>
@@ -186,13 +65,144 @@
     </main>
 
     <script>
-        // Simple accordion logic
-        document.querySelectorAll('.course-accordion').forEach(accordion => {
-            // Default first one open
-            if(accordion.querySelector('h4').textContent.includes('CSIT122')) {
-                accordion.classList.add('active');
-            }
-        });
+        let demandData = { courses: [], sections: [] };
+
+        function getDemandBadgeClass(fillPercent) {
+            if (fillPercent >= 80) return 'badge-high';
+            if (fillPercent >= 50) return 'badge-moderate';
+            return 'badge-low';
+        }
+
+        function getDemandLabel(fillPercent) {
+            if (fillPercent >= 80) return 'HIGH';
+            if (fillPercent >= 50) return 'MODERATE';
+            return 'LOW';
+        }
+
+        function getProgressBarColor(fillPercent) {
+            if (fillPercent >= 80) return 'red';
+            if (fillPercent >= 50) return '#ffc107';
+            return 'green';
+        }
+
+        function loadSectionDemand() {
+            fetch('/api/student/section-demand')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        demandData = data.data;
+                        renderSectionDemand();
+                        updateStats();
+                    }
+                })
+                .catch(error => console.error('Error loading section demand:', error));
+        }
+
+        function renderSectionDemand() {
+            const container = document.getElementById('course-accordion-container');
+            container.innerHTML = '';
+
+            // Group sections by course
+            const courseMap = {};
+            demandData.sections.forEach(section => {
+                const courseCode = section.courseCode;
+                if (!courseMap[courseCode]) {
+                    courseMap[courseCode] = {
+                        code: courseCode,
+                        name: section.courseName,
+                        sections: []
+                    };
+                }
+                courseMap[courseCode].sections.push(section);
+            });
+
+            // Render each course accordion
+            Object.values(courseMap).forEach((course, index) => {
+                const accordion = document.createElement('div');
+                accordion.className = 'course-accordion';
+                if (index === 0) accordion.classList.add('active');
+
+                const fillPercent = course.sections.length > 0 
+                    ? (course.sections.reduce((sum, s) => sum + (s.enrolledCount / s.capacity * 100), 0) / course.sections.length)
+                    : 0;
+
+                accordion.innerHTML = `
+                    <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
+                        <div>
+                            <h4>${course.code} - ${course.name}</h4>
+                            <span>${course.sections.length} sections available</span>
+                        </div>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="accordion-content" id="course-${course.code}">
+                        <!-- Sections will be added here -->
+                    </div>
+                `;
+
+                container.appendChild(accordion);
+
+                // Add section cards
+                const contentDiv = accordion.querySelector('.accordion-content');
+                course.sections.forEach(section => {
+                    const enrollPercent = (section.enrolledCount / section.capacity) * 100;
+                    const demandLabel = getDemandLabel(enrollPercent);
+                    const badgeClass = getDemandBadgeClass(enrollPercent);
+                    const progressColor = getProgressBarColor(enrollPercent);
+
+                    const card = document.createElement('div');
+                    card.className = 'section-demand-card';
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <span style="font-weight: 700; font-size: 1rem;">${section.sectionCode}</span>
+                                    <span class="badge ${badgeClass}">${demandLabel}</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: var(--text-medium);">
+                                    ${section.timeslot || 'TBA'}<br>
+                                    ${section.room || 'TBA'}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-users"></i> ${section.enrolledCount}/${section.capacity}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-medium);">${Math.round(enrollPercent)}% filled</div>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-label"><span>Enrolled</span><span>${section.enrolledCount} / ${section.capacity}</span></div>
+                            <div class="progress-bar-wrapper">
+                                <div class="progress-bar ${progressColor}" style="width: ${enrollPercent}%;"></div>
+                            </div>
+                        </div>
+                    `;
+                    contentDiv.appendChild(card);
+                });
+            });
+
+            // Add accordion click handlers
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.style.cursor = 'pointer';
+            });
+        }
+
+        function updateStats() {
+            const totalSections = demandData.sections.length;
+            let highDemand = 0;
+            let lowDemand = 0;
+
+            demandData.sections.forEach(section => {
+                const fillPercent = (section.enrolledCount / section.capacity) * 100;
+                if (fillPercent >= 80) highDemand++;
+                else if (fillPercent < 50) lowDemand++;
+            });
+
+            document.getElementById('total-sections').textContent = totalSections;
+            document.getElementById('high-demand').textContent = highDemand;
+            document.getElementById('low-demand').textContent = lowDemand;
+        }
+
+        // Load section demand on page load
+        document.addEventListener('DOMContentLoaded', loadSectionDemand);
     </script>
     <style>
         .course-accordion .accordion-content { display: none; }

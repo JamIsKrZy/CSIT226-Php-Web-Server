@@ -2,6 +2,7 @@
 use App\Controllers\LoginController;
 use App\Controllers\UserController;
 use App\Controllers\ApiController;
+use App\Controllers\AdminController;
 
 // Login routes
 $router->get('/login', [LoginController::class, 'showLogin']);
@@ -22,6 +23,12 @@ $router->get('/enrollment-plan', [UserController::class, 'enrollmentPlan']);
 $router->get('/alternative-sections', [UserController::class, 'alternativeSections']);
 $router->get('/enrollment-updates', [UserController::class, 'enrollmentUpdates']);
 $router->get('/change-password', [UserController::class, 'changePassword']);
+
+// Admin routes
+$router->get('/admin/management', [AdminController::class, 'management']);
+$router->post('/admin/management/add', [AdminController::class, 'add']);
+$router->post('/admin/management/edit', [AdminController::class, 'edit']);
+$router->post('/admin/management/delete', [AdminController::class, 'delete']);
 
 // Home route
 $router->get('/', [LoginController::class, 'showLogin']);
@@ -47,3 +54,16 @@ $router->post('/api/sections', [ApiController::class, 'createSection']);
 $router->put('/api/sections', [ApiController::class, 'updateSection']);
 $router->delete('/api/sections', [ApiController::class, 'deleteSection']);
 
+// Admin API
+$router->get('/api/admin/list', [ApiController::class, 'getAdmins']);
+$router->get('/api/admin/detail', [ApiController::class, 'getAdmin']);
+$router->post('/api/admin/create', [ApiController::class, 'createAdmin']);
+$router->put('/api/admin/update', [ApiController::class, 'updateAdmin']);
+$router->delete('/api/admin/delete', [ApiController::class, 'deleteAdmin']);
+
+// Student API
+$router->get('/api/student/enrollment-plan', [ApiController::class, 'getStudentEnrollmentPlan']);
+$router->post('/api/student/add-section', [ApiController::class, 'addSectionToEnrollment']);
+$router->delete('/api/student/remove-section', [ApiController::class, 'removeSectionFromEnrollment']);
+$router->get('/api/student/section-demand', [ApiController::class, 'getSectionDemand']);
+$router->get('/api/student/interest-data', [ApiController::class, 'getStudentInterestData']);

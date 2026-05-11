@@ -64,35 +64,12 @@
                                     <th>Subject Code</th>
                                     <th>Subject Name</th>
                                     <th>Section</th>
-                                    <th>Program</th>
-                                    <th>Year Level</th>
                                     <th style="text-align: center;">Interested Students</th>
                                     <th>Demand Label</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php foreach ($interestData as $row): ?>
-                                <tr>
-                                    <td><span style="font-weight: 600; color: var(--primary-maroon);"><?php echo $row['code']; ?></span></td>
-                                    <td><?php echo $row['name']; ?></td>
-                                    <td><span style="font-weight: 500;"><?php echo $row['section']; ?></span></td>
-                                    <td><?php echo $row['program']; ?></td>
-                                    <td><?php echo $row['year']; ?></td>
-                                    <td style="text-align: center; font-weight: 600;"><?php echo $row['interest']; ?></td>
-                                    <td>
-                                        <span class="badge <?php 
-                                            echo match($row['demand']) {
-                                                'High' => 'badge-danger',
-                                                'Moderate' => 'badge-warning',
-                                                'Low' => 'badge-valid',
-                                                default => ''
-                                            };
-                                        ?>">
-                                            <?php echo $row['demand']; ?>
-                                        </span>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
+                            <tbody id="interest-table-body">
+                                <!-- Loaded by JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -107,5 +84,51 @@
             </div>
         </div>
     </main>
+
+    <script>
+        let interestData = [];
+
+        function loadInterestData() {
+            fetch('/api/student/interest-data')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        interestData = data.data || [];
+                        renderInterestTable();
+                    }
+                })
+                .catch(error => console.error('Error loading interest data:', error));
+        }
+
+        function renderInterestTable() {
+            const tbody = document.getElementById('interest-table-body');
+            tbody.innerHTML = '';
+
+            if (interestData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: var(--text-medium);">No interest data available.</td></tr>';
+                return;
+            }
+
+            interestData.forEach(row => {
+                const demandBadgeClass = row.demand === 'High' ? 'badge-danger' : row.demand === 'Moderate' ? 'badge-warning' : 'badge-valid';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><span style="font-weight: 600; color: var(--primary-maroon);">${row.code}</span></td>
+                    <td>${row.name}</td>
+                    <td><span style="font-weight: 500;">${row.section}</span></td>
+                    <td style="text-align: center; font-weight: 600;">${row.interest}</td>
+                    <td>
+                        <span class="badge ${demandBadgeClass}">
+                            ${row.demand}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Load interest data on page load
+        document.addEventListener('DOMContentLoaded', loadInterestData);
+    </script>
 </body>
 </html>

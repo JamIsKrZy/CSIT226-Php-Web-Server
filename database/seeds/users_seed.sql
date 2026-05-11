@@ -15,16 +15,16 @@ INSERT INTO User (firstName, lastName, email, password, academicYear, userType, 
 ('Ms.', 'White', 'admin.white@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'admin', 'active');
 
 -- Link Students to Student table
-INSERT INTO Student (userID, points, studentNumber, major) VALUES
-(1, 25, 'STU001', 'Computer Science'),
-(2, 30, 'STU002', 'Information Technology'),
-(3, 20, 'STU003', 'Computer Science'),
-(4, 35, 'STU004', 'Information Technology'),
-(5, 28, 'STU005', 'Computer Science');
+INSERT INTO Student (userID, studentNumber, program, yearLevel, points, major) VALUES
+(1, 'STU001', 'BSCS', 2, 25, 'Computer Science'),
+(2, 'STU002', 'BSIT', 2, 30, 'Information Technology'),
+(3, 'STU003', 'BSCS', 1, 20, 'Computer Science'),
+(4, 'STU004', 'BSIT', 3, 35, 'Information Technology'),
+(5, 'STU005', 'BSCS', 1, 28, 'Computer Science');
 
 -- Link Admins to Admin table
-INSERT INTO Admin (userID, department, designation) VALUES
-(6, 'Enrollment Services', 'Director'),
-(7, 'Academic Affairs', 'Coordinator');
+INSERT INTO Admin (userID, adminCode, role, department, designation) VALUES
+(6, 'ADM001', 'Registrar', 'Enrollment Services', 'Director'),
+(7, 'ADM002', 'Department', 'Academic Affairs', 'Coordinator');
 
 -- Note: All passwords are hashed version of 'password123'

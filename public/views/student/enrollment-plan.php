@@ -34,9 +34,9 @@
                         <i class="fa-solid fa-book-open"></i>
                         <span>Planned Units</span>
                     </div>
-                    <div class="stat-value">0 / 24 Units</div>
+                    <div class="stat-value"><span id="planned-units">0</span> / 24 Units</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar" style="width: 0%;"></div>
+                        <div class="stat-progress-bar" id="unit-progress-bar" style="width: 0%;"></div>
                     </div>
                 </div>
 
@@ -45,7 +45,7 @@
                         <i class="fa-solid fa-layer-group"></i>
                         <span>Planned Subjects</span>
                     </div>
-                    <div class="stat-value">9 Subjects</div>
+                    <div class="stat-value"><span id="planned-subjects">0</span> Subjects</div>
                 </div>
 
                 <div class="stat-card">
@@ -53,7 +53,7 @@
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>Schedule Conflicts</span>
                     </div>
-                    <div class="stat-value">0 Conflicts</div>
+                    <div class="stat-value"><span id="conflict-count">0</span> Conflicts</div>
                 </div>
 
                 <div class="stat-card">
@@ -61,7 +61,7 @@
                         <i class="fa-solid fa-clipboard-check"></i>
                         <span>Enrollment Readiness</span>
                     </div>
-                    <div class="stat-value" style="color: var(--status-warning);">Incomplete</div>
+                    <div class="stat-value" id="readiness-status" style="color: var(--status-warning);">Incomplete</div>
                 </div>
             </div>
 
@@ -86,37 +86,8 @@
                                             <th>Actions</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <?php 
-                                        $courses = [
-                                            ['code' => 'CS132', 'title' => 'Introduction to Computer Systems', 'units' => '3.0'],
-                                            ['code' => 'CSIT112', 'title' => 'Discrete Structures 1', 'units' => '3.0'],
-                                            ['code' => 'CSIT122', 'title' => 'Intermediate Programming', 'units' => '3.0'],
-                                            ['code' => 'CSIT201', 'title' => 'Platform-based Development 2 (Web)', 'units' => '1.0'],
-                                            ['code' => 'HUM031', 'title' => 'Art Appreciation', 'units' => '3.0'],
-                                            ['code' => 'MATH136', 'title' => 'Differential and Integral Calculus', 'units' => '3.0'],
-                                            ['code' => 'NSTP112', 'title' => 'National Service Training Program 2', 'units' => '3.0'],
-                                            ['code' => 'PE104', 'title' => 'Fitness Exercises / PATHFit 2', 'units' => '2.0'],
-                                            ['code' => 'SOCSCI031', 'title' => 'Readings in Philippine History', 'units' => '3.0'],
-                                        ];
-                                        foreach ($courses as $course): ?>
-                                        <tr>
-                                            <td>
-                                                <div class="section-row-info">
-                                                    <span class="section-row-title"><?php echo $course['code']; ?></span>
-                                                    <span class="section-row-subtitle"><?php echo $course['title']; ?></span>
-                                                </div>
-                                            </td>
-                                            <td style="color: var(--text-light); font-style: italic;">No Section</td>
-                                            <td style="color: var(--text-light);">---</td>
-                                            <td style="color: var(--text-light);">---</td>
-                                            <td><?php echo $course['units']; ?></td>
-                                            <td><span class="badge" style="background: #eee; color: #999;">Pending</span></td>
-                                            <td>
-                                                <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem;">Select Section</button>
-                                            </td>
-                                        </tr>
-                                        <?php endforeach; ?>
+                                    <tbody id="enrollment-table-body">
+                                        <!-- Loaded by JavaScript -->
                                     </tbody>
                                 </table>
                             </div>
@@ -168,7 +139,7 @@
                                     <div class="validation-item">
                                         <i class="fa-solid fa-circle-info" style="color: var(--status-info);"></i>
                                         <div class="validation-text">
-                                            <p>0 Units Selected</p>
+                                            <p><span id="selected-units">0</span> Units Selected</p>
                                             <span>Maximum Allowed: 24</span>
                                         </div>
                                     </div>
@@ -177,8 +148,8 @@
                                 <div class="validation-section">
                                     <h4>Enrollment Readiness</h4>
                                     <div style="margin-top: 10px; padding: 16px; background: #f8f9fa; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-                                        <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; color: var(--text-medium);">Plan Status: Incomplete</p>
-                                        <p style="font-size: 0.8rem; color: var(--text-medium);">Please select sections for all planned subjects.</p>
+                                        <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; color: var(--text-medium);">Plan Status: <span id="plan-status">Incomplete</span></p>
+                                        <p style="font-size: 0.8rem; color: var(--text-medium);" id="plan-message">Please select sections for all planned subjects.</p>
                                     </div>
                                 </div>
                             </div>
@@ -188,5 +159,126 @@
             </div>
         </div>
     </main>
+
+    <script>
+        let enrollmentPlan = [];
+        let currentStudentID = 1; // Get from session or auth context in production
+
+        function loadEnrollmentPlan() {
+            fetch(`/api/student/enrollment-plan?studentID=${currentStudentID}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        enrollmentPlan = data.data || [];
+                        renderEnrollmentTable();
+                        updateStats();
+                    }
+                })
+                .catch(error => console.error('Error loading enrollment plan:', error));
+        }
+
+        function renderEnrollmentTable() {
+            const tbody = document.getElementById('enrollment-table-body');
+            tbody.innerHTML = '';
+
+            if (enrollmentPlan.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-medium);">No sections selected. Select a section to get started.</td></tr>';
+                return;
+            }
+
+            enrollmentPlan.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const statusBadgeColor = item.enrollmentStatus === 'enrolled' ? 'badge-valid' : item.enrollmentStatus === 'pending' ? '#ffc107' : '#6c757d';
+                const statusLabel = item.enrollmentStatus ? item.enrollmentStatus.charAt(0).toUpperCase() + item.enrollmentStatus.slice(1) : 'Pending';
+
+                row.innerHTML = `
+                    <td>
+                        <div class="section-row-info">
+                            <span class="section-row-title">${item.courseCode}</span>
+                            <span class="section-row-subtitle">${item.courseName}</span>
+                        </div>
+                    </td>
+                    <td>${item.sectionCode}</td>
+                    <td style="font-size: 0.9rem;">${item.timeslot || '---'}</td>
+                    <td>${item.room || '---'}</td>
+                    <td>${item.credits}</td>
+                    <td><span class="badge" style="background: ${statusBadgeColor}; color: white;">${statusLabel}</span></td>
+                    <td>
+                        <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem; color: var(--status-danger);" 
+                            onclick="removeSection(${item.plannedItemID})">
+                            <i class="fa-solid fa-trash-can"></i> Remove
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats() {
+            let totalUnits = 0;
+            let plannedSubjects = enrollmentPlan.length;
+
+            enrollmentPlan.forEach(item => {
+                totalUnits += item.credits || 0;
+            });
+
+            document.getElementById('planned-units').textContent = totalUnits;
+            document.getElementById('planned-subjects').textContent = plannedSubjects;
+            document.getElementById('selected-units').textContent = totalUnits;
+
+            const maxUnits = 24;
+            const progressPercent = Math.min((totalUnits / maxUnits) * 100, 100);
+            document.getElementById('unit-progress-bar').style.width = progressPercent + '%';
+
+            // Update readiness status
+            const readinessElement = document.getElementById('readiness-status');
+            const planStatusElement = document.getElementById('plan-status');
+            const planMessageElement = document.getElementById('plan-message');
+
+            if (totalUnits === 0) {
+                readinessElement.textContent = 'No Plan';
+                readinessElement.style.color = 'var(--text-medium)';
+                planStatusElement.textContent = 'Empty';
+                planMessageElement.textContent = 'No sections have been selected yet.';
+            } else if (totalUnits < 12) {
+                readinessElement.textContent = 'Incomplete';
+                readinessElement.style.color = 'var(--status-warning)';
+                planStatusElement.textContent = 'Incomplete';
+                planMessageElement.textContent = 'At least 12 units are recommended for full-time status.';
+            } else if (totalUnits <= maxUnits) {
+                readinessElement.textContent = 'Complete';
+                readinessElement.style.color = 'var(--status-valid)';
+                planStatusElement.textContent = 'Complete';
+                planMessageElement.textContent = 'Your enrollment plan is ready for submission.';
+            } else {
+                readinessElement.textContent = 'Exceeds Max';
+                readinessElement.style.color = 'var(--status-danger)';
+                planStatusElement.textContent = 'Over Limit';
+                planMessageElement.textContent = `Total units (${totalUnits}) exceeds maximum (${maxUnits}).`;
+            }
+        }
+
+        function removeSection(plannedItemID) {
+            if (!confirm('Are you sure you want to remove this section?')) return;
+
+            fetch('/api/student/remove-section', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plannedItemID: plannedItemID })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadEnrollmentPlan();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => console.error('Error removing section:', error));
+        }
+
+        // Load enrollment plan on page load
+        document.addEventListener('DOMContentLoaded', loadEnrollmentPlan);
+    </script>
 </body>
 </html>
