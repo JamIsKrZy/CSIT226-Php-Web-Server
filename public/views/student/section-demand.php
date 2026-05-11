@@ -11,10 +11,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <?php $currentPage = 'section-demand'; include 'partials/sidebar.php'; ?>
+    <?php $currentPage = 'section-demand'; include __DIR__ . '/../partials/sidebar.php'; ?>
 
     <main class="main-container">
-        <?php include 'partials/header.php'; ?>
+        <?php include __DIR__ . '/../partials/header.php'; ?>
 
         <div class="content-wrapper">
             <div class="page-header">
