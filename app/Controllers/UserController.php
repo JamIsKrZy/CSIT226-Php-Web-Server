@@ -59,6 +59,42 @@ class UserController {
     }
 
     /**
+     * Show alternative sections page
+     */
+    public function alternativeSections() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/alternative-sections.php';
+    }
+
+    /**
+     * Show enrollment updates page
+     */
+    public function enrollmentUpdates() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/enrollment-updates.php';
+    }
+
+    /**
+     * Show change password page
+     */
+    public function changePassword() {
+        // Check if user is logged in
+        if (!isset($_SESSION['user'])) {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/change-password.php';
+    }
+
+    /**
      * Get user by ID
      */
     public function getUser($id) {

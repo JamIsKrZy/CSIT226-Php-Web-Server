@@ -16,6 +16,9 @@ $router->get('/users', [UserController::class, 'listUsers']);
 $router->get('/dashboard', [UserController::class, 'dashboard']);
 $router->get('/section-demand', [UserController::class, 'sectionDemand']);
 $router->get('/enrollment-plan', [UserController::class, 'enrollmentPlan']);
+$router->get('/alternative-sections', [UserController::class, 'alternativeSections']);
+$router->get('/enrollment-updates', [UserController::class, 'enrollmentUpdates']);
+$router->get('/change-password', [UserController::class, 'changePassword']);
 
 // Home route
 $router->get('/', [LoginController::class, 'showLogin']);
