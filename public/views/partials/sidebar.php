@@ -19,17 +19,13 @@
             <i class="fa-solid fa-chart-line"></i>
             Section Demand
         </a>
-        <a href="#" class="menu-item">
+        <a href="/alternative-sections" class="menu-item <?php echo $currentPage == 'alternative-sections' ? 'active' : ''; ?>">
             <i class="fa-solid fa-shuffle"></i>
             Alternative Sections
         </a>
-        <a href="#" class="menu-item">
+        <a href="/enrollment-updates" class="menu-item <?php echo $currentPage == 'enrollment-updates' ? 'active' : ''; ?>">
             <i class="fa-solid fa-bullhorn"></i>
             Enrollment Updates
-        </a>
-        <a href="#" class="menu-item">
-            <i class="fa-solid fa-gear"></i>
-            Settings
         </a>
     </nav>
     <div class="sidebar-footer">
