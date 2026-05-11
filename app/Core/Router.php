@@ -15,6 +15,16 @@ class Router {
         $this->routes['POST'][$uri] = $action;
     }
 
+    // Registers a PUT route
+    public function put($uri, $action) {
+        $this->routes['PUT'][$uri] = $action;
+    }
+
+    // Registers a DELETE route
+    public function delete($uri, $action) {
+        $this->routes['DELETE'][$uri] = $action;
+    }
+
     // Matches the request to a route
     public function resolve($uri, $method) {
         // Strip query strings (e.g., /login?id=1 becomes /login)

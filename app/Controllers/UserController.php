@@ -15,10 +15,48 @@ class UserController {
      */
     public function listUsers() {
         try {
-            $users = $this->db->query('SELECT id, email, first_name, last_name, created_at FROM users ORDER BY created_at DESC');
+            $users = $this->db->query('
+                SELECT userID, firstName, lastName, email, userType, status, createdAt 
+                FROM User 
+                ORDER BY createdAt DESC
+            ');
             return require __DIR__ . '/../../public/views/users.php';
         } catch (\Exception $e) {
             echo "Error fetching users: " . $e->getMessage();
+        }
+    }
+
+    /**
+     * Display all courses in a table
+     */
+    public function listCourses() {
+        try {
+            $courses = $this->db->query('
+                SELECT courseID, courseCode, courseName, credits, category, department, createdAt 
+                FROM Course 
+                ORDER BY courseCode ASC
+            ');
+            return require __DIR__ . '/../../public/views/courses.php';
+        } catch (\Exception $e) {
+            echo "Error fetching courses: " . $e->getMessage();
+        }
+    }
+
+    /**
+     * Display all sections in a table
+     */
+    public function listSections() {
+        try {
+            $sections = $this->db->query('
+                SELECT s.sectionID, s.courseID, s.sectionCode, s.timeslot, s.room, s.capacity, 
+                       s.enrolledCount, s.instructor, s.semester, c.courseCode, c.courseName
+                FROM Section s
+                JOIN Course c ON s.courseID = c.courseID
+                ORDER BY s.sectionCode ASC
+            ');
+            return require __DIR__ . '/../../public/views/sections.php';
+        } catch (\Exception $e) {
+            echo "Error fetching sections: " . $e->getMessage();
         }
     }
 
@@ -121,7 +159,7 @@ class UserController {
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         
         return $this->db->execute(
-            'INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)',
+            'INSERT INTO users (email, password, firstName, lastName) VALUES (?, ?, ?, ?)',
             [$email, $hashedPassword, $first_name, $last_name]
         );
     }
@@ -131,7 +169,7 @@ class UserController {
      */
     public function updateUser($id, $first_name, $last_name) {
         return $this->db->execute(
-            'UPDATE users SET first_name = ?, last_name = ? WHERE id = ?',
+            'UPDATE users SET firstName = ?, lastName = ? WHERE userID = ?',
             [$first_name, $last_name, $id]
         );
     }
@@ -140,6 +178,6 @@ class UserController {
      * Delete user
      */
     public function deleteUser($id) {
-        return $this->db->execute('DELETE FROM users WHERE id = ?', [$id]);
+        return $this->db->execute('DELETE FROM users WHERE userID = ?', [$id]);
     }
 }

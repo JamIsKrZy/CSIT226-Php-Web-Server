@@ -93,6 +93,7 @@ A modern, responsive, and secure enrollment management system built with PHP, My
 | `docker-compose logs -f` | Tail application logs |
 | `docker-compose down -v` | Stop services and remove volumes |
 | `docker exec php-app bash /var/www/html/database/setup.sh` | Reset and seed database |
+| `mysql -h 127.0.0.1 -P 3306 -u root -p` | Connect database |
 
 ---
 

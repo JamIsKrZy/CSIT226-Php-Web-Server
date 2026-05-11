@@ -22,7 +22,6 @@ echo "Connecting to MySQL at $DB_HOST..."
 # Run migrations
 echo ""
 echo "Running migrations..."
-# source migration/001_create_users_table.sh
 MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/migration/001_create_users_table.sql
 
 if [ $? -eq 0 ]; then
@@ -35,18 +34,60 @@ fi
 # Run seeds
 echo ""
 echo "Running seeds..."
-chmod +x database/seeds/seed_users.sh
-source database/seeds/seed_users.sh
-# MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/users_seed.sql
 
+# Load users seed (User, Student, Admin tables)
+echo "Loading users data..."
+MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/users_seed.sql
 if [ $? -eq 0 ]; then
-    echo "✓ Seeds completed successfully"
+    echo "  ✓ Users seed loaded"
 else
-    echo "✗ Seeds failed"
+    echo "  ✗ Users seed failed"
+    exit 1
+fi
+
+# Load courses seed
+echo "Loading courses data..."
+MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/courses_seed.sql
+if [ $? -eq 0 ]; then
+    echo "  ✓ Courses seed loaded"
+else
+    echo "  ✗ Courses seed failed"
+    exit 1
+fi
+
+# Load sections seed
+echo "Loading sections data..."
+MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/sections_seed.sql
+if [ $? -eq 0 ]; then
+    echo "  ✓ Sections seed loaded"
+else
+    echo "  ✗ Sections seed failed"
+    exit 1
+fi
+
+# Load schedules and planned items seed
+echo "Loading schedules data..."
+MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/schedules_seed.sql
+if [ $? -eq 0 ]; then
+    echo "  ✓ Schedules seed loaded"
+else
+    echo "  ✗ Schedules seed failed"
+    exit 1
+fi
+
+# Load notifications seed
+echo "Loading notifications data..."
+MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/notifications_seed.sql
+if [ $? -eq 0 ]; then
+    echo "  ✓ Notifications seed loaded"
+else
+    echo "  ✗ Notifications seed failed"
     exit 1
 fi
 
 echo ""
+echo "================================"
+echo "✓ Database setup completed!"
 echo "================================"
 echo "Setup Complete!"
 echo "================================"

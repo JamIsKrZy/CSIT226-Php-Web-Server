@@ -1,16 +1,118 @@
--- Migration: Create users table
--- Description: Creates the users table for storing user credentials
--- Run this manually in MySQL or include in your migration system
-
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
+-- 1. Base User Table
+CREATE TABLE IF NOT EXISTS User (
+    userID INT PRIMARY KEY AUTO_INCREMENT,
+    firstName VARCHAR(100) NOT NULL,
+    lastName VARCHAR(100) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    academicYear INT DEFAULT 2026,
+    userType VARCHAR(20) DEFAULT 'student',
+    status VARCHAR(20) DEFAULT 'active',
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Create an index on email for faster lookups
--- CREATE INDEX IF NOT EXISTS idx_email ON users(email);
+-- 2. Admin (Specialization of User)
+CREATE TABLE IF NOT EXISTS Admin (
+    adminID INT PRIMARY KEY AUTO_INCREMENT,
+    userID INT UNIQUE NOT NULL,
+    department VARCHAR(100),
+    designation VARCHAR(100),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE
+);
+
+-- 3. Student (Specialization of User)
+CREATE TABLE IF NOT EXISTS Student (
+    studentID INT PRIMARY KEY AUTO_INCREMENT,
+    userID INT UNIQUE NOT NULL,
+    points INT DEFAULT 0,
+    studentNumber VARCHAR(20) UNIQUE,
+    major VARCHAR(100),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE
+);
+
+-- 4. Notification (Linked to Student)
+CREATE TABLE IF NOT EXISTS Notification (
+    notificationID INT PRIMARY KEY AUTO_INCREMENT,
+    type VARCHAR(50) NOT NULL,
+    title VARCHAR(255),
+    message TEXT,
+    isRead BOOLEAN DEFAULT FALSE,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    studentID INT NOT NULL,
+    FOREIGN KEY (studentID) REFERENCES Student(studentID) ON DELETE CASCADE
+);
+
+-- 5. Course
+CREATE TABLE IF NOT EXISTS Course (
+    courseID INT PRIMARY KEY AUTO_INCREMENT,
+    courseCode VARCHAR(20) UNIQUE NOT NULL,
+    courseName VARCHAR(255) NOT NULL,
+    credits INT NOT NULL,
+    category VARCHAR(100),
+    description TEXT,
+    department VARCHAR(100),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 6. Section (Child of Course)
+CREATE TABLE IF NOT EXISTS Section (
+    sectionID INT PRIMARY KEY AUTO_INCREMENT,
+    courseID INT NOT NULL,
+    sectionCode VARCHAR(20) UNIQUE NOT NULL,
+    timeslot VARCHAR(100),
+    room VARCHAR(50),
+    capacity INT DEFAULT 50,
+    enrolledCount INT DEFAULT 0,
+    instructor VARCHAR(100),
+    semester VARCHAR(20),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (courseID) REFERENCES Course(courseID) ON DELETE CASCADE
+);
+
+-- 7. Schedule (Owned by Student)
+CREATE TABLE IF NOT EXISTS Schedule (
+    scheduleID INT PRIMARY KEY AUTO_INCREMENT,
+    studentID INT NOT NULL,
+    semester VARCHAR(20) NOT NULL,
+    academicYear INT,
+    status VARCHAR(20) DEFAULT 'draft',
+    notes TEXT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (studentID) REFERENCES Student(studentID) ON DELETE CASCADE
+);
+
+-- 8. PlannedItem (Link between Schedule and Section)
+CREATE TABLE IF NOT EXISTS PlannedItem (
+    plannedItemID INT PRIMARY KEY AUTO_INCREMENT,
+    scheduleID INT NOT NULL,
+    sectionID INT NOT NULL,
+    commitmentLevel INT DEFAULT 5,
+    priority INT DEFAULT 1,
+    enrollmentStatus VARCHAR(20) DEFAULT 'planned',
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (scheduleID) REFERENCES Schedule(scheduleID) ON DELETE CASCADE,
+    FOREIGN KEY (sectionID) REFERENCES Section(sectionID) ON DELETE CASCADE,
+    UNIQUE KEY unique_schedule_section (scheduleID, sectionID)
+);
+
+-- 9. WaitlistSimulation (Linked to Section)
+CREATE TABLE IF NOT EXISTS WaitlistSimulation (
+    waitlistSimulationID INT PRIMARY KEY AUTO_INCREMENT,
+    sectionID INT NOT NULL,
+    studentID INT NOT NULL,
+    priorityScore INT,
+    position INT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (sectionID) REFERENCES Section(sectionID) ON DELETE CASCADE,
+    FOREIGN KEY (studentID) REFERENCES Student(studentID) ON DELETE CASCADE
+);
