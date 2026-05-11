@@ -4,6 +4,7 @@
 TRUNCATE TABLE enrollment_updates;
 
 INSERT INTO users (admin_id, email, password, first_name, last_name, role, status) VALUES
+('ADM-000', 'admin@cit.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 'System', 'Admin', 'admin', 'Active'),
 ('ADM-001', 'juan.delacruz@cit.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Juan', 'Dela Cruz', 'admin', 'Active'),
 ('ADM-002', 'm.santos@cit.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Maria', 'Santos', 'admin', 'Active'),
 ('ADM-003', 'r.lim@cit.edu', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Ricardo', 'Lim', 'admin', 'Inactive')
