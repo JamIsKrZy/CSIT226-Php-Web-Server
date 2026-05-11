@@ -176,9 +176,31 @@ class UserController {
 
         // If admin type, create the Admin specialization record
         if ($user_type === 'admin' && $newUser) {
+            $adminCode = trim($_POST['admin_code'] ?? '');
+            if (empty($adminCode)) {
+                $adminCode = 'ADM-' . date('Y') . '-' . str_pad($newUser['userID'], 3, '0', STR_PAD_LEFT);
+            }
+            $department = $_POST['department'] ?? 'Enrollment Services';
+            $designation = $_POST['designation'] ?? 'Staff';
+
             $this->db->execute(
-                'INSERT INTO Admin (userID) VALUES (?)',
-                [$newUser['userID']]
+                'INSERT INTO Admin (userID, adminCode, role, department, designation) VALUES (?, ?, ?, ?, ?)',
+                [$newUser['userID'], $adminCode, 'admin', $department, $designation]
+            );
+        }
+
+        // If student type, create the Student specialization record
+        if ($user_type === 'student' && $newUser) {
+            $studentNumber = trim($_POST['student_number'] ?? '');
+            if (empty($studentNumber)) {
+                $studentNumber = 'STU-' . date('y') . '-' . str_pad($newUser['userID'], 4, '0', STR_PAD_LEFT);
+            }
+            $program = $_POST['program'] ?? 'BSCS';
+            $major = $_POST['major'] ?? 'General';
+
+            $this->db->execute(
+                'INSERT INTO Student (userID, studentNumber, program, yearLevel, points, major) VALUES (?, ?, ?, 1, 0, ?)',
+                [$newUser['userID'], $studentNumber, $program, $major]
             );
         }
 

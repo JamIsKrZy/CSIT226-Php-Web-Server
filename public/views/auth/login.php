@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
     <header class="header-brand">
@@ -24,9 +25,17 @@
                 <h2>WITS</h2>
                 <h3>Student Portal</h3>
 
-                <p class="apply-text">For new enrollees, click <strong>APPLY</strong>.</p>
-                <button type="button" class="apply-btn">APPLY</button>
-                <p class="apply-note">The apply button is only enabled during the official application period.</p>
+                <p class="register-text" style="font-size: 0.95rem; color: var(--text-dark); margin-bottom: 25px; line-height: 1.5;">
+                    Need a new account? Register below to start planning your pre-enrollment.
+                </p>
+                <div class="registration-links" style="display: flex; flex-direction: column; gap: 12px;">
+                    <a href="/signup?role=student" class="btn-register student-btn" style="display: block; text-align: center; background-color: var(--primary-color); color: white; padding: 12px 20px; border-radius: 4px; font-weight: 600; text-decoration: none; transition: all 0.2s; border: 2px solid var(--primary-color); font-size: 0.95rem; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-graduation-cap" style="margin-right: 8px;"></i> REGISTER AS STUDENT
+                    </a>
+                    <a href="/signup?role=admin" class="btn-register admin-btn" style="display: block; text-align: center; background-color: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); padding: 10px 20px; border-radius: 4px; font-weight: 600; text-decoration: none; transition: all 0.2s; font-size: 0.95rem; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-user-shield" style="margin-right: 8px;"></i> REGISTER AS ADMIN
+                    </a>
+                </div>
             </div>
         </section>
 
