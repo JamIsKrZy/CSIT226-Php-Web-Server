@@ -1,38 +1,63 @@
 FROM php:8.2-apache
 
-# Install system dependencies including MySQL client
+# ============================================================
+# LAYER 1: System dependencies
+# Cached until apt packages or PHP extensions change
+# ============================================================
 RUN apt-get update && apt-get install -y \
     libzip-dev \
     unzip \
     git \
     mariadb-client-compat \
-    && docker-php-ext-install pdo pdo_mysql
+    && docker-php-ext-install pdo pdo_mysql \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Enable Apache rewrite (for routing)
+# ============================================================
+# LAYER 2: Apache + PHP config
+# Cached until configs change
+# ============================================================
 RUN a2enmod rewrite
 
-# Copy custom php config
 COPY php.ini /usr/local/etc/php/
 
-# Set working directory
-WORKDIR /var/www/html
-
-# Copy all application files
-COPY . /var/www/html
-
-# Set proper document root
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
 
-# Create necessary directories with proper permissions
-RUN mkdir -p /var/www/html && \
-    chown -R www-data:www-data /var/www/html
+# ============================================================
+# LAYER 3: Composer binary
+# Cached until this RUN instruction changes
+# ============================================================
+RUN curl -sS https://getcomposer.org/installer \
+    | php -- --install-dir=/usr/local/bin --filename=composer \
+    && composer --version
 
-# Install Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# ============================================================
+# LAYER 4: PHP dependencies (the critical caching layer)
+# ONLY copy composer.json and composer.lock first.
+# This layer is re-used as long as those two files don't change,
+# even if your app source code changes.
+# ============================================================
+WORKDIR /var/www/html
 
-# Install PHP dependencies
-RUN cd /var/www/html && composer install --optimize-autoloader --no-interaction && \
-    composer dump-autoload -o
+COPY composer.json  ./
+
+RUN composer install \
+    --optimize-autoloader \
+    --no-interaction \
+    --no-scripts \
+    --prefer-dist
+
+# ============================================================
+# LAYER 5: Application source code
+# This is the only layer that rebuilds on normal code changes
+# ============================================================
+COPY . /var/www/html
+
+# Re-run dump-autoload now that actual source is present
+RUN composer dump-autoload -o
+
+# Fix permissions
+RUN chown -R www-data:www-data /var/www/html
 
 EXPOSE 80

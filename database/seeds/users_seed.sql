@@ -2,17 +2,17 @@
 -- This populates the User, Student, and Admin tables with sample data
 
 -- Insert Students
-INSERT INTO User (firstName, lastName, email, password, academicYear, userType, status) VALUES
-('John', 'Doe', 'john.doe@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
-('Jane', 'Smith', 'jane.smith@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
-('Bob', 'Wilson', 'bob.wilson@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
-('Alice', 'Johnson', 'alice.johnson@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
-('Charlie', 'Brown', 'charlie.brown@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active');
+-- INSERT INTO User (firstName, lastName, email, password, academicYear, userType, status) VALUES
+-- ('John', 'Doe', 'john.doe@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
+-- ('Jane', 'Smith', 'jane.smith@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
+-- ('Bob', 'Wilson', 'bob.wilson@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
+-- ('Alice', 'Johnson', 'alice.johnson@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active'),
+-- ('Charlie', 'Brown', 'charlie.brown@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'student', 'active');
 
--- Insert Admins
-INSERT INTO User (firstName, lastName, email, password, academicYear, userType, status) VALUES
-('Dr.', 'Anderson', 'admin.anderson@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'admin', 'active'),
-('Ms.', 'White', 'admin.white@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'admin', 'active');
+-- -- Insert Admins
+-- INSERT INTO User (firstName, lastName, email, password, academicYear, userType, status) VALUES
+-- ('Dr.', 'Anderson', 'admin.anderson@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'admin', 'active'),
+-- ('Ms.', 'White', 'admin.white@university.edu', '$2y$10$slYQmyNdGzin7olVCrmK.OPST9/PgBkqquzi.Ee60kiKy67fsqkha', 2026, 'admin', 'active');
 
 -- Link Students to Student table
 INSERT INTO Student (userID, studentNumber, program, yearLevel, points, major) VALUES

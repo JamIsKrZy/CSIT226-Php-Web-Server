@@ -7,9 +7,7 @@ echo "================================"
 echo "Database Setup Script"
 echo "================================"
 
-# Wait for MySQL to be ready
-echo "Waiting for MySQL to be ready..."
-sleep 5
+
 
 # Get credentials from environment or use defaults
 DB_HOST=${DB_HOST:-db}
@@ -17,7 +15,20 @@ DB_USER=${DB_USER:-myuser}
 DB_PASSWORD=${DB_PASSWORD:-mypassword}
 DB_NAME=${DB_NAME:-mydb}
 
-echo "Connecting to MySQL at $DB_HOST..."
+# Wait for MySQL to be ready
+echo "Waiting for MySQL to be ready..."
+MAX_TRIES=30
+COUNT=0
+until MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl -e "SELECT 1" "$DB_NAME" > /dev/null 2>&1; do
+  COUNT=$((COUNT + 1))
+  if [ $COUNT -ge $MAX_TRIES ]; then
+    echo "✗ MySQL did not become ready in time"
+    exit 1
+  fi
+  echo "  MySQL not ready yet, retrying in 2s... ($COUNT/$MAX_TRIES)"
+  sleep 2
+done
+echo "✓ MySQL is ready"
 
 # Run migrations
 echo ""
@@ -37,6 +48,8 @@ echo "Running seeds..."
 
 # Load users seed (User, Student, Admin tables)
 echo "Loading users data..."
+chmod +x /var/www/html/database/seeds/seed_users.sh
+source /var/www/html/database/seeds/seed_users.sh
 MYSQL_PWD="$DB_PASSWORD" mysql -h "$DB_HOST" -u "$DB_USER" --skip-ssl "$DB_NAME" < /var/www/html/database/seeds/users_seed.sql
 if [ $? -eq 0 ]; then
     echo "  ✓ Users seed loaded"

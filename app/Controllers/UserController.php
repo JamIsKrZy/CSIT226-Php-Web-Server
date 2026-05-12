@@ -153,15 +153,33 @@ class UserController {
     }
 
     /**
-     * Create new user
+     * Create new student user (User + Student record)
      */
-    public function createUser($email, $password, $first_name, $last_name) {
+    public function createUser($email, $password, $first_name, $last_name, $academic_year = 2026, $user_type = 'student', $status = 'active') {
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        
-        return $this->db->execute(
-            'INSERT INTO User (email, password, firstName, lastName, userType, status) VALUES (?, ?, ?, ?, ?, ?)',
-            [$email, $hashedPassword, $first_name, $last_name, 'student', 'active']
+
+        // Insert into User table
+        $this->db->execute(
+            'INSERT INTO User (email, password, firstName, lastName, academicYear, userType, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [$email, $hashedPassword, $first_name, $last_name, $academic_year, $user_type, $status]
         );
+
+        // Get the new user's ID
+        $newUser = $this->db->queryOne(
+            'SELECT userID FROM User WHERE email = ?',
+            [$email]
+        );
+
+        // If admin type, create the Admin specialization record
+        if ($user_type === 'admin' && $newUser) {
+            $this->db->execute(
+                'INSERT INTO Admin (userID) VALUES (?)',
+                [$newUser['userID']]
+            );
+        }
+
+        return $newUser['userID'] ?? null;
     }
 
     /**
