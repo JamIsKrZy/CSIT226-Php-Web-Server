@@ -40,10 +40,14 @@ class LoginController {
             $_SESSION['user'] = [
                 'id' => $user['id'],
                 'email' => $user['email'],
-                'first_name' => $user['first_name']
+                'first_name' => $user['first_name'],
+                'role' => $user['role']
             ];
             $_SESSION['success'] = 'Login successful!';
-            header('Location: /dashboard');
+            
+            // Redirect based on user role
+            $redirectUrl = ($user['role'] === 'admin') ? '/admin/student-interest' : '/dashboard';
+            header('Location: ' . $redirectUrl);
             exit;
         } else {
             $_SESSION['error'] = 'Invalid email or password';

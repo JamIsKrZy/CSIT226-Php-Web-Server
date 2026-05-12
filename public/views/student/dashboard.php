@@ -182,6 +182,39 @@
                     </div>
                 </div>
             </div>
+
+            <?php if (isset($_SESSION['user']) && $_SESSION['user']['role'] === 'admin'): ?>
+            <!-- Admin Management Section -->
+            <div style="margin-top: 40px;">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3><i class="fa-solid fa-shield" style="color: var(--primary-maroon); margin-right: 8px;"></i> Admin Panel</h3>
+                            <p style="margin: 8px 0 0 0; color: var(--text-medium); font-size: 0.85rem;">Access administrative functions and management tools</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                            <a href="/admin/management" class="admin-panel-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; border: 2px solid var(--border-color); border-radius: 8px; text-decoration: none; color: inherit; transition: all 0.2s ease; cursor: pointer;">
+                                <i class="fa-solid fa-users-gear" style="font-size: 2rem; color: var(--primary-maroon); margin-bottom: 12px;"></i>
+                                <h4 style="margin: 0; text-align: center;">Admin Management</h4>
+                                <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: var(--text-medium); text-align: center;">Manage admin accounts</p>
+                            </a>
+                            <a href="/admin/student-interest" class="admin-panel-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; border: 2px solid var(--border-color); border-radius: 8px; text-decoration: none; color: inherit; transition: all 0.2s ease; cursor: pointer;">
+                                <i class="fa-solid fa-chart-bar" style="font-size: 2rem; color: var(--primary-maroon); margin-bottom: 12px;"></i>
+                                <h4 style="margin: 0; text-align: center;">Student Interest</h4>
+                                <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: var(--text-medium); text-align: center;">Monitor enrollment interest</p>
+                            </a>
+                            <a href="/admin/enrollment-updates" class="admin-panel-card" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; border: 2px solid var(--border-color); border-radius: 8px; text-decoration: none; color: inherit; transition: all 0.2s ease; cursor: pointer;">
+                                <i class="fa-solid fa-bullhorn" style="font-size: 2rem; color: var(--primary-maroon); margin-bottom: 12px;"></i>
+                                <h4 style="margin: 0; text-align: center;">Enrollment Updates</h4>
+                                <p style="margin: 8px 0 0 0; font-size: 0.85rem; color: var(--text-medium); text-align: center;">Manage announcements</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
         </div>
     </main>
 </body>

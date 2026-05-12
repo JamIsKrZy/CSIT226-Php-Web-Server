@@ -25,6 +25,8 @@ $router->get('/enrollment-updates', [UserController::class, 'enrollmentUpdates']
 $router->get('/change-password', [UserController::class, 'changePassword']);
 
 // Admin routes
+$router->get('/admin/student-interest', [UserController::class, 'adminStudentInterest']);
+$router->get('/admin/enrollment-updates', [UserController::class, 'adminEnrollmentUpdates']);
 $router->get('/admin/management', [AdminController::class, 'management']);
 $router->post('/admin/management/add', [AdminController::class, 'add']);
 $router->post('/admin/management/edit', [AdminController::class, 'edit']);

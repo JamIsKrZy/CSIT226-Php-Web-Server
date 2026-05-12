@@ -407,6 +407,12 @@ class ApiController {
      * Get all admins
      */
     public function getAdmins() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            echo $this->response(false, 'Unauthorized: Admin access required', null, 403);
+            return;
+        }
+        
         try {
             $admins = $this->db->query('
                 SELECT a.adminID AS id, a.adminCode AS admin_id, CONCAT(u.firstName, " ", u.lastName) AS name, 
@@ -425,6 +431,12 @@ class ApiController {
      * Get single admin
      */
     public function getAdmin() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            echo $this->response(false, 'Unauthorized: Admin access required', null, 403);
+            return;
+        }
+        
         $id = $_GET['id'] ?? null;
         if (!$id) {
             echo $this->response(false, 'Admin ID is required', null, 400);
@@ -454,6 +466,12 @@ class ApiController {
      * Create admin
      */
     public function createAdmin() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            echo $this->response(false, 'Unauthorized: Admin access required', null, 403);
+            return;
+        }
+        
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (!$data || !isset($data['firstName'], $data['lastName'], $data['email'], $data['password'], $data['adminCode'])) {
@@ -485,6 +503,12 @@ class ApiController {
      * Update admin
      */
     public function updateAdmin() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            echo $this->response(false, 'Unauthorized: Admin access required', null, 403);
+            return;
+        }
+        
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (!$data || !isset($data['adminID'])) {
@@ -542,6 +566,12 @@ class ApiController {
      * Delete admin
      */
     public function deleteAdmin() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            echo $this->response(false, 'Unauthorized: Admin access required', null, 403);
+            return;
+        }
+        
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (!$data || !isset($data['adminID'])) {

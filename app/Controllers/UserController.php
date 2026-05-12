@@ -143,7 +143,7 @@ class UserController {
      * Verify login credentials
      */
     public function login($email, $password) {
-        $user = $this->db->queryOne('SELECT userID as id, email, password, firstName as first_name FROM User WHERE email = ?', [$email]);
+        $user = $this->db->queryOne('SELECT userID as id, email, password, firstName as first_name, userType as role FROM User WHERE email = ?', [$email]);
         
         if ($user && password_verify($password, $user['password'])) {
             return $user;
@@ -197,5 +197,29 @@ class UserController {
      */
     public function deleteUser($id) {
         return $this->db->execute('DELETE FROM User WHERE userID = ?', [$id]);
+    }
+
+    /**
+     * Show admin student interest monitoring page
+     */
+    public function adminStudentInterest() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/admin/student-interest.php';
+    }
+
+    /**
+     * Show admin enrollment updates page
+     */
+    public function adminEnrollmentUpdates() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/admin/enrollment-updates.php';
     }
 }

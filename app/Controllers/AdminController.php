@@ -15,6 +15,11 @@ class AdminController {
      * Display admin management page (data loaded via AJAX)
      */
     public function management() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
         return require __DIR__ . '/../../public/views/admin/admin-management.php';
     }
 
@@ -22,6 +27,11 @@ class AdminController {
      * Add admin (form POST - for backwards compatibility)
      */
     public function add() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
         $data = $_POST;
         $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
 
@@ -44,6 +54,11 @@ class AdminController {
      * Edit admin (form POST - for backwards compatibility)
      */
     public function edit() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
         $data = $_POST;
         $adminID = $data['id'];
 
@@ -72,6 +87,11 @@ class AdminController {
      * Delete admin (form POST - for backwards compatibility)
      */
     public function delete() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
         $data = $_POST;
         $adminID = $data['id'];
 

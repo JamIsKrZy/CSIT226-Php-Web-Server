@@ -11,7 +11,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <?php $currentPage = 'student-interest'; include __DIR__ . '/../partials/sidebar.php'; ?>
+    <?php 
+    // Ensure only admins can access this page
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+        header('Location: /');
+        exit;
+    }
+    $currentPage = 'student-interest'; include __DIR__ . '/../partials/sidebar.php'; 
+    ?>
 
     <main class="main-container">
         <?php include __DIR__ . '/../partials/header.php'; ?>
