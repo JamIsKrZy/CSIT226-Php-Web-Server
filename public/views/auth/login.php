@@ -25,7 +25,9 @@
                 <h3>Student Portal</h3>
 
                 <p class="apply-text">For new enrollees, click <strong>APPLY</strong>.</p>
-                <button type="button" class="apply-btn">APPLY</button>
+                <a href="/signup">
+                    <button type="button" class="apply-btn">APPLY</button>
+                </a>
                 <p class="apply-note">The apply button is only enabled during the official application period.</p>
             </div>
         </section>
