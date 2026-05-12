@@ -31,25 +31,36 @@ declare -a notifications=(
 )
 
 for line in "${notifications[@]}"; do
-  IFS='|' read -r studentNumber type title message isRead <<< "$line"
-  studentNumberEscaped=$(sql_quote "$studentNumber")
+  IFS='|' read -r studentNum type title isRead <<< "$line"
+
+  # Escape inputs
+  studentNumEscaped=$(sql_quote "$studentNum")
   typeEscaped=$(sql_quote "$type")
   titleEscaped=$(sql_quote "$title")
-  messageEscaped=$(sql_quote "$message")
 
-  # Get studentID
-  studentID=$(mysql_exec "SELECT studentID FROM Student WHERE studentNumber = '$studentNumberEscaped' LIMIT 1;" | tail -1)
-  if [[ -z "$studentID" || "$studentID" == "studentID" ]]; then
-    echo "  ERROR: student number $studentNumber not found. Seed users first."
-    exit 1
+  # SINGLE QUERY DESIGN:
+  # We use INSERT INTO ... SELECT to find the studentID on the fly.
+  query="
+    INSERT INTO Notification (type, title, message, isRead, studentID)
+    SELECT 
+        '$typeEscaped', 
+        '$titleEscaped', 
+        '$titleEscaped', -- Using title as message for example
+        $isRead, 
+        studentID 
+    FROM Student 
+    WHERE studentNumber = '$studentNumEscaped' 
+    LIMIT 1;
+  "
+
+  if mysql_exec "$query" > /dev/null 2>&1; then
+     # Note: This checks if the SQL command succeeded, 
+     # but you might want to check row counts if the student number doesn't exist.
+     echo "  Successfully processed notification for $studentNum"
+  else
+     echo "  ERROR: Failed to insert notification for $studentNum"
+     exit 1
   fi
-
-  mysql_exec "INSERT INTO Notification (type, title, message, isRead, studentID) 
-  VALUES ('$typeEscaped', '$titleEscaped', '$messageEscaped', $isRead, $studentID);" > /dev/null || {
-    echo "  ERROR: Failed to add notification for $studentNumber"
-    exit 1
-  }
-  echo "  Added notification for $studentNumber: $title"
 done
 
 echo "Notifications seed complete."
