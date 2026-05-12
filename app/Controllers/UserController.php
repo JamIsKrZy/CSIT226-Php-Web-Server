@@ -15,10 +15,48 @@ class UserController {
      */
     public function listUsers() {
         try {
-            $users = $this->db->query('SELECT id, email, first_name, last_name, created_at FROM users ORDER BY created_at DESC');
+            $users = $this->db->query('
+                SELECT userID, firstName, lastName, email, userType, status, createdAt 
+                FROM User 
+                ORDER BY createdAt DESC
+            ');
             return require __DIR__ . '/../../public/views/users.php';
         } catch (\Exception $e) {
             echo "Error fetching users: " . $e->getMessage();
+        }
+    }
+
+    /**
+     * Display all courses in a table
+     */
+    public function listCourses() {
+        try {
+            $courses = $this->db->query('
+                SELECT courseID, courseCode, courseName, credits, category, department, createdAt 
+                FROM Course 
+                ORDER BY courseCode ASC
+            ');
+            return require __DIR__ . '/../../public/views/courses.php';
+        } catch (\Exception $e) {
+            echo "Error fetching courses: " . $e->getMessage();
+        }
+    }
+
+    /**
+     * Display all sections in a table
+     */
+    public function listSections() {
+        try {
+            $sections = $this->db->query('
+                SELECT s.sectionID, s.courseID, s.sectionCode, s.timeslot, s.room, s.capacity, 
+                       s.enrolledCount, s.instructor, s.semester, c.courseCode, c.courseName
+                FROM Section s
+                JOIN Course c ON s.courseID = c.courseID
+                ORDER BY s.sectionCode ASC
+            ');
+            return require __DIR__ . '/../../public/views/sections.php';
+        } catch (\Exception $e) {
+            echo "Error fetching sections: " . $e->getMessage();
         }
     }
 
@@ -98,14 +136,14 @@ class UserController {
      * Get user by ID
      */
     public function getUser($id) {
-        return $this->db->queryOne('SELECT * FROM users WHERE id = ?', [$id]);
+        return $this->db->queryOne('SELECT * FROM User WHERE userID = ?', [$id]);
     }
 
     /**
      * Verify login credentials
      */
     public function login($email, $password) {
-        $user = $this->db->queryOne('SELECT id, email, password, first_name FROM users WHERE email = ?', [$email]);
+        $user = $this->db->queryOne('SELECT userID as id, email, password, firstName as first_name, userType as role FROM User WHERE email = ?', [$email]);
         
         if ($user && password_verify($password, $user['password'])) {
             return $user;
@@ -115,15 +153,33 @@ class UserController {
     }
 
     /**
-     * Create new user
+     * Create new student user (User + Student record)
      */
-    public function createUser($email, $password, $first_name, $last_name) {
+    public function createUser($email, $password, $first_name, $last_name, $academic_year = 2026, $user_type = 'student', $status = 'active') {
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        
-        return $this->db->execute(
-            'INSERT INTO users (email, password, first_name, last_name) VALUES (?, ?, ?, ?)',
-            [$email, $hashedPassword, $first_name, $last_name]
+
+        // Insert into User table
+        $this->db->execute(
+            'INSERT INTO User (email, password, firstName, lastName, academicYear, userType, status) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [$email, $hashedPassword, $first_name, $last_name, $academic_year, $user_type, $status]
         );
+
+        // Get the new user's ID
+        $newUser = $this->db->queryOne(
+            'SELECT userID FROM User WHERE email = ?',
+            [$email]
+        );
+
+        // If admin type, create the Admin specialization record
+        if ($user_type === 'admin' && $newUser) {
+            $this->db->execute(
+                'INSERT INTO Admin (userID) VALUES (?)',
+                [$newUser['userID']]
+            );
+        }
+
+        return $newUser['userID'] ?? null;
     }
 
     /**
@@ -131,7 +187,7 @@ class UserController {
      */
     public function updateUser($id, $first_name, $last_name) {
         return $this->db->execute(
-            'UPDATE users SET first_name = ?, last_name = ? WHERE id = ?',
+            'UPDATE User SET firstName = ?, lastName = ? WHERE userID = ?',
             [$first_name, $last_name, $id]
         );
     }
@@ -140,6 +196,30 @@ class UserController {
      * Delete user
      */
     public function deleteUser($id) {
-        return $this->db->execute('DELETE FROM users WHERE id = ?', [$id]);
+        return $this->db->execute('DELETE FROM User WHERE userID = ?', [$id]);
+    }
+
+    /**
+     * Show admin student interest monitoring page
+     */
+    public function adminStudentInterest() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/admin/student-interest.php';
+    }
+
+    /**
+     * Show admin enrollment updates page
+     */
+    public function adminEnrollmentUpdates() {
+        // Check if user is logged in and is an admin
+        if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+            header('Location: /');
+            exit;
+        }
+        return require __DIR__ . '/../../public/views/admin/enrollment-updates.php';
     }
 }

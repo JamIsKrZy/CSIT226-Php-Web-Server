@@ -40,10 +40,14 @@ class LoginController {
             $_SESSION['user'] = [
                 'id' => $user['id'],
                 'email' => $user['email'],
-                'first_name' => $user['first_name']
+                'first_name' => $user['first_name'],
+                'role' => $user['role']
             ];
             $_SESSION['success'] = 'Login successful!';
-            header('Location: /dashboard');
+            
+            // Redirect based on user role
+            $redirectUrl = ($user['role'] === 'admin') ? '/admin/student-interest' : '/dashboard';
+            header('Location: ' . $redirectUrl);
             exit;
         } else {
             $_SESSION['error'] = 'Invalid email or password';
@@ -54,10 +58,9 @@ class LoginController {
 
     // Show the signup form
     public function showSignup() {
-        return require __DIR__ . '/../../public/views/signup.php';
+        return require __DIR__ . '/../../public/views/auth/signup.php';
     }
 
-    // Handle signup form submission
     public function handleSignup() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             http_response_code(405);
@@ -65,44 +68,60 @@ class LoginController {
             return;
         }
 
-        $first_name = $_POST['first_name'] ?? '';
-        $last_name = $_POST['last_name'] ?? '';
-        $email = $_POST['email'] ?? '';
-        $password = $_POST['password'] ?? '';
+        $first_name       = trim($_POST['first_name'] ?? '');
+        $last_name        = trim($_POST['last_name'] ?? '');
+        $email            = trim($_POST['email'] ?? '');
+        $password         = $_POST['password'] ?? '';
         $confirm_password = $_POST['confirm_password'] ?? '';
+        $academic_year    = $_POST['academic_year'] ?? 2026;
+        $user_type        = $_POST['user_type'] ?? 'student';
+        $status           = $_POST['status'] ?? 'active';
 
-        // Validation
+        // Whitelist user_type and status to prevent arbitrary values
+        $allowed_types    = ['student', 'admin'];
+        $allowed_statuses = ['active', 'inactive'];
+
+        if (!in_array($user_type, $allowed_types)) {
+            $user_type = 'student';
+        }
+        if (!in_array($status, $allowed_statuses)) {
+            $status = 'active';
+        }
+
+        // Required field validation
         if (empty($first_name) || empty($last_name) || empty($email) || empty($password) || empty($confirm_password)) {
             $_SESSION['error'] = 'All fields are required';
             header('Location: /signup');
             exit;
         }
 
-        // Validate email format
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $_SESSION['error'] = 'Invalid email format';
             header('Location: /signup');
             exit;
         }
 
-        // Validate password length
         if (strlen($password) < 8) {
             $_SESSION['error'] = 'Password must be at least 8 characters long';
             header('Location: /signup');
             exit;
         }
 
-        // Check if passwords match
         if ($password !== $confirm_password) {
             $_SESSION['error'] = 'Passwords do not match';
             header('Location: /signup');
             exit;
         }
 
-        // Check if email already exists
+        if (!is_numeric($academic_year) || $academic_year < 2000 || $academic_year > 2100) {
+            $_SESSION['error'] = 'Invalid academic year';
+            header('Location: /signup');
+            exit;
+        }
+
+        // Check duplicate email
         $db = new Database();
-        $existingUser = $db->queryOne('SELECT id FROM users WHERE email = ?', [$email]);
-        
+        $existingUser = $db->queryOne('SELECT userID FROM User WHERE email = ?', [$email]);
         if ($existingUser) {
             $_SESSION['error'] = 'Email already registered. Please login or use a different email.';
             header('Location: /signup');
@@ -111,7 +130,10 @@ class LoginController {
 
         // Create the user
         try {
-            $this->userController->createUser($email, $password, $first_name, $last_name);
+            $this->userController->createUser(
+                $email, $password, $first_name, $last_name,
+                (int) $academic_year, $user_type, $status
+            );
             $_SESSION['success'] = 'Account created successfully! Please login with your credentials.';
             header('Location: /');
             exit;

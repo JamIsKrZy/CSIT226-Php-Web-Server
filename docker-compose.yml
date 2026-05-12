@@ -11,12 +11,15 @@ services:
       - .:/var/www/html
       - vendor:/var/www/html/vendor
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_USER=myuser
       - DB_PASSWORD=mypassword
       - DB_NAME=mydb
+    networks:
+      - app-network
 
   db:
     image: mysql:8.0
@@ -31,6 +34,18 @@ services:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:          
+      - app-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "myuser", "-pmypassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+networks:              
+  app-network:
+    driver: bridge
 
 volumes:
   mysql-data:

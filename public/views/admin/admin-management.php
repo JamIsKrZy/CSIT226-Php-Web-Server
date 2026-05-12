@@ -11,7 +11,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <?php $currentPage = 'admin-management'; include __DIR__ . '/../partials/sidebar.php'; ?>
+    <?php 
+    // Ensure only admins can access this page
+    if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
+        header('Location: /');
+        exit;
+    }
+    $currentPage = 'admin-management'; include __DIR__ . '/../partials/sidebar.php'; 
+    ?>
 
     <main class="main-container">
         <?php include __DIR__ . '/../partials/header.php'; ?>
@@ -57,32 +64,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach ($admins as $admin): ?>
-                                <tr>
-                                    <td><span style="font-weight: 600; color: var(--primary-maroon);"><?php echo $admin['admin_id']; ?></span></td>
-                                    <td style="font-weight: 500;"><?php echo $admin['name']; ?></td>
-                                    <td><?php echo $admin['email']; ?></td>
-                                    <td><?php echo $admin['role']; ?></td>
-                                    <td>
-                                        <span class="badge <?php echo $admin['status'] == 'Active' ? 'badge-valid' : 'badge-danger'; ?>">
-                                            <?php echo $admin['status']; ?>
-                                        </span>
-                                    </td>
-                                    <td style="color: var(--text-medium); font-size: 0.85rem;"><?php echo date('M d, Y', strtotime($admin['created_at'])); ?></td>
-                                    <td style="text-align: right;">
-                                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                            <button class="btn btn-outline" style="padding: 6px; aspect-ratio: 1; border-color: #eee;" title="Edit" 
-                                                onclick='openEditModal(<?php echo json_encode($admin); ?>)'>
-                                                <i class="fa-solid fa-pen-to-square" style="color: var(--primary-maroon);"></i>
-                                            </button>
-                                            <button class="btn btn-outline" style="padding: 6px; aspect-ratio: 1; border-color: #eee;" title="Delete" 
-                                                onclick="openDeleteModal(<?php echo $admin['id']; ?>)">
-                                                <i class="fa-solid fa-trash-can" style="color: var(--status-danger);"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
+                                <!-- Loaded by JavaScript -->
                             </tbody>
                         </table>
                     </div>
@@ -98,41 +80,51 @@
                 <h3>Add New Administrator</h3>
                 <i class="fa-solid fa-xmark close" onclick="closeModal('addAdminModal')"></i>
             </div>
-            <form action="/admin/management/add" method="POST" class="modal-body">
+            <div class="modal-body">
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
                         <label>First Name</label>
-                        <input type="text" name="first_name" placeholder="e.g. Juan" required>
+                        <input type="text" id="add_first_name" placeholder="e.g. Juan" required>
                     </div>
                     <div class="form-group">
                         <label>Last Name</label>
-                        <input type="text" name="last_name" placeholder="e.g. Dela Cruz" required>
+                        <input type="text" id="add_last_name" placeholder="e.g. Dela Cruz" required>
                     </div>
                     <div class="form-group">
                         <label>CIT Email</label>
-                        <input type="email" name="email" placeholder="name@cit.edu" required>
+                        <input type="email" id="add_email" placeholder="name@cit.edu" required>
                     </div>
                     <div class="form-group">
-                        <label>Admin ID</label>
-                        <input type="text" name="admin_id" placeholder="ADM-###" required>
+                        <label>Admin Code</label>
+                        <input type="text" id="add_adminCode" placeholder="ADM-###" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="add_role">
+                            <option value="">Select Role</option>
+                            <option value="Registrar">Registrar</option>
+                            <option value="Department">Department</option>
+                            <option value="Chair">Program Chair</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Password</label>
-                        <input type="password" name="password" required>
+                        <input type="password" id="add_password" required>
                     </div>
-                    <div class="form-group">
-                        <label>Status</label>
-                        <select name="status">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
-                        </select>
+                    <div class="form-group" style="grid-column: 1/-1;">
+                        <label>Department</label>
+                        <input type="text" id="add_department" placeholder="e.g. Enrollment Services">
+                    </div>
+                    <div class="form-group" style="grid-column: 1/-1;">
+                        <label>Designation</label>
+                        <input type="text" id="add_designation" placeholder="e.g. Director">
                     </div>
                 </div>
                 <div class="modal-footer" style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 12px;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('addAdminModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Admin</button>
+                    <button type="button" class="btn btn-primary" onclick="submitAddAdmin()">Create Admin</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
@@ -143,59 +135,125 @@
                 <h3>Edit Administrator Details</h3>
                 <i class="fa-solid fa-xmark close" onclick="closeModal('editAdminModal')"></i>
             </div>
-            <form action="/admin/management/edit" method="POST" class="modal-body">
-                <input type="hidden" name="id" id="edit_admin_id_internal">
+            <div class="modal-body">
+                <input type="hidden" id="edit_admin_id_internal">
                 <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="form-group">
                         <label>First Name</label>
-                        <input type="text" name="first_name" id="edit_first_name" required>
+                        <input type="text" id="edit_first_name" required>
                     </div>
                     <div class="form-group">
                         <label>Last Name</label>
-                        <input type="text" name="last_name" id="edit_last_name" required>
+                        <input type="text" id="edit_last_name" required>
                     </div>
                     <div class="form-group">
                         <label>CIT Email</label>
-                        <input type="email" name="email" id="edit_email" required>
+                        <input type="email" id="edit_email" required>
                     </div>
                     <div class="form-group">
-                        <label>Admin ID</label>
-                        <input type="text" name="admin_id" id="edit_admin_id" required>
+                        <label>Admin Code</label>
+                        <input type="text" id="edit_adminCode" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Role</label>
+                        <select id="edit_role">
+                            <option value="">Select Role</option>
+                            <option value="Registrar">Registrar</option>
+                            <option value="Department">Department</option>
+                            <option value="Chair">Program Chair</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>Status</label>
-                        <select name="status" id="edit_status">
-                            <option value="Active">Active</option>
-                            <option value="Inactive">Inactive</option>
+                        <select id="edit_status">
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
                         </select>
+                    </div>
+                    <div class="form-group" style="grid-column: 1/-1;">
+                        <label>Department</label>
+                        <input type="text" id="edit_department">
+                    </div>
+                    <div class="form-group" style="grid-column: 1/-1;">
+                        <label>Designation</label>
+                        <input type="text" id="edit_designation">
                     </div>
                 </div>
                 <div class="modal-footer" style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 12px;">
                     <button type="button" class="btn btn-outline" onclick="closeModal('editAdminModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEditAdmin()">Save Changes</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <!-- Delete Confirm Modal -->
     <div id="deleteConfirmModal" class="modal">
         <div class="modal-content" style="max-width: 400px; text-align: center;">
-            <form action="/admin/management/delete" method="POST" class="modal-body" style="padding: 40px 30px;">
-                <input type="hidden" name="id" id="delete_admin_id">
+            <div class="modal-body" style="padding: 40px 30px;">
+                <input type="hidden" id="delete_admin_id">
                 <i class="fa-solid fa-triangle-exclamation" style="font-size: 3rem; color: var(--status-danger); margin-bottom: 20px;"></i>
                 <h3 style="margin-bottom: 10px;">Confirm Deletion</h3>
                 <p style="color: var(--text-medium); font-size: 0.95rem; line-height: 1.5;">Are you sure you want to remove this admin account? This action cannot be undone.</p>
                 
                 <div style="margin-top: 32px; display: flex; gap: 12px;">
                     <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeModal('deleteConfirmModal')">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="flex: 1; background: var(--status-danger);">Confirm Delete</button>
+                    <button type="button" class="btn btn-primary" style="flex: 1; background: var(--status-danger);" onclick="submitDeleteAdmin()">Confirm Delete</button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script>
+        let adminList = [];
+
+        // Load admin list on page load
+        function loadAdmins() {
+            fetch('/api/admin/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        adminList = data.data;
+                        renderAdminTable();
+                    }
+                })
+                .catch(error => console.error('Error loading admins:', error));
+        }
+
+        function renderAdminTable() {
+            const tbody = document.querySelector('.data-table tbody');
+            tbody.innerHTML = '';
+            
+            adminList.forEach(admin => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span style="font-weight: 600; color: var(--primary-maroon);">${admin.admin_id}</span></td>
+                    <td style="font-weight: 500;">${admin.name}</td>
+                    <td>${admin.email}</td>
+                    <td>${admin.role || '-'}</td>
+                    <td>
+                        <span class="badge ${admin.status == 'active' ? 'badge-valid' : 'badge-danger'}">
+                            ${admin.status.charAt(0).toUpperCase() + admin.status.slice(1)}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-medium); font-size: 0.85rem;">${new Date(admin.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                    <td style="text-align: right;">
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                            <button class="btn btn-outline" style="padding: 6px; aspect-ratio: 1; border-color: #eee;" title="Edit" 
+                                onclick="fetchAndOpenEditModal(${admin.id})">
+                                <i class="fa-solid fa-pen-to-square" style="color: var(--primary-maroon);"></i>
+                            </button>
+                            <button class="btn btn-outline" style="padding: 6px; aspect-ratio: 1; border-color: #eee;" title="Delete" 
+                                onclick="openDeleteModal(${admin.id})">
+                                <i class="fa-solid fa-trash-can" style="color: var(--status-danger);"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
         function openModal(id) {
             document.getElementById(id).style.display = 'flex';
         }
@@ -204,24 +262,139 @@
             document.getElementById(id).style.display = 'none';
         }
 
-        function openEditModal(admin) {
-            document.getElementById('edit_admin_id_internal').value = admin.id;
-            // Split name if needed, but since we are fetching separately now...
-            // Wait, in my controller I used CONCAT. I should probably fetch separate fields.
-            // Let's fix the controller query first or handle it here.
-            
-            // I'll update the controller query to include first_name and last_name separately.
-            document.getElementById('edit_first_name').value = admin.first_name || '';
-            document.getElementById('edit_last_name').value = admin.last_name || '';
-            document.getElementById('edit_email').value = admin.email;
-            document.getElementById('edit_admin_id').value = admin.admin_id;
-            document.getElementById('edit_status').value = admin.status;
-            openModal('editAdminModal');
+        function fetchAndOpenEditModal(adminID) {
+            fetch(`/api/admin/detail?id=${adminID}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const admin = data.data;
+                        document.getElementById('edit_admin_id_internal').value = admin.id;
+                        document.getElementById('edit_first_name').value = admin.firstName;
+                        document.getElementById('edit_last_name').value = admin.lastName;
+                        document.getElementById('edit_email').value = admin.email;
+                        document.getElementById('edit_adminCode').value = admin.adminCode;
+                        document.getElementById('edit_role').value = admin.role || '';
+                        document.getElementById('edit_status').value = admin.status;
+                        document.getElementById('edit_department').value = admin.department || '';
+                        document.getElementById('edit_designation').value = admin.designation || '';
+                        openModal('editAdminModal');
+                    }
+                })
+                .catch(error => console.error('Error fetching admin:', error));
+        }
+
+        function submitAddAdmin() {
+            const data = {
+                firstName: document.getElementById('add_first_name').value,
+                lastName: document.getElementById('add_last_name').value,
+                email: document.getElementById('add_email').value,
+                adminCode: document.getElementById('add_adminCode').value,
+                role: document.getElementById('add_role').value,
+                password: document.getElementById('add_password').value,
+                department: document.getElementById('add_department').value,
+                designation: document.getElementById('add_designation').value
+            };
+
+            if (!data.firstName || !data.lastName || !data.email || !data.adminCode || !data.password) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            fetch('/api/admin/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Admin created successfully');
+                        closeModal('addAdminModal');
+                        loadAdmins();
+                        // Clear form
+                        document.getElementById('add_first_name').value = '';
+                        document.getElementById('add_last_name').value = '';
+                        document.getElementById('add_email').value = '';
+                        document.getElementById('add_adminCode').value = '';
+                        document.getElementById('add_password').value = '';
+                        document.getElementById('add_department').value = '';
+                        document.getElementById('add_designation').value = '';
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error creating admin: ' + error);
+                    console.error(error);
+                });
+        }
+
+        function submitEditAdmin() {
+            const data = {
+                adminID: document.getElementById('edit_admin_id_internal').value,
+                firstName: document.getElementById('edit_first_name').value,
+                lastName: document.getElementById('edit_last_name').value,
+                email: document.getElementById('edit_email').value,
+                adminCode: document.getElementById('edit_adminCode').value,
+                role: document.getElementById('edit_role').value,
+                status: document.getElementById('edit_status').value,
+                department: document.getElementById('edit_department').value,
+                designation: document.getElementById('edit_designation').value
+            };
+
+            if (!data.firstName || !data.lastName || !data.email) {
+                alert('Please fill in all required fields');
+                return;
+            }
+
+            fetch('/api/admin/update', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Admin updated successfully');
+                        closeModal('editAdminModal');
+                        loadAdmins();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error updating admin: ' + error);
+                    console.error(error);
+                });
         }
 
         function openDeleteModal(id) {
             document.getElementById('delete_admin_id').value = id;
             openModal('deleteConfirmModal');
+        }
+
+        function submitDeleteAdmin() {
+            const adminID = document.getElementById('delete_admin_id').value;
+            
+            fetch('/api/admin/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminID: adminID })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Admin deleted successfully');
+                        closeModal('deleteConfirmModal');
+                        loadAdmins();
+                    } else {
+                        alert('Error: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    alert('Error deleting admin: ' + error);
+                    console.error(error);
+                });
         }
 
         // Close on click outside
@@ -230,6 +403,9 @@
                 event.target.style.display = 'none';
             }
         }
+
+        // Load admins on page load
+        document.addEventListener('DOMContentLoaded', loadAdmins);
     </script>
 
     <style>
