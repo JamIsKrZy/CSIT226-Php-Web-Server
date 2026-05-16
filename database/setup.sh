@@ -84,6 +84,16 @@ else
   exit 1
 fi
 
+echo "Loading enrollment updates data..."
+chmod +x "$SCRIPT_DIR/seeds/seed_updates.sh"
+"$SCRIPT_DIR/seeds/seed_updates.sh"
+if [ $? -eq 0 ]; then
+  echo "  ✓ Enrollment updates seed loaded"
+else
+  echo "  ✗ Enrollment updates seed failed"
+  exit 1
+fi
+
 echo "Loading notifications data..."
 chmod +x "$SCRIPT_DIR/seeds/seed_notifications.sh"
 "$SCRIPT_DIR/seeds/seed_notifications.sh"

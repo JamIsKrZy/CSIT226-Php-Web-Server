@@ -117,6 +117,9 @@ class UserController {
             header('Location: /');
             exit;
         }
+
+        $updates = $this->db->query('SELECT * FROM enrollmentUpdates ORDER BY created_at DESC');
+
         return require __DIR__ . '/../../public/views/student/enrollment-updates.php';
     }
 
@@ -220,6 +223,9 @@ class UserController {
             header('Location: /');
             exit;
         }
+
+        $updates = $this->db->query('SELECT * FROM enrollmentUpdates ORDER BY created_at DESC');
+        
         return require __DIR__ . '/../../public/views/admin/enrollment-updates.php';
     }
 }

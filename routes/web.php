@@ -8,6 +8,8 @@ use App\Controllers\AdminController;
 $router->get('/login', [LoginController::class, 'showLogin']);
 $router->post('/login', [LoginController::class, 'handleLogin']);
 $router->get('/logout', [LoginController::class, 'logout']);
+$router->get('/admin/login', [LoginController::class, 'showAdminLogin']);
+$router->post('/admin/login', [LoginController::class, 'handleAdminLogin']);
 
 // Signup routes
 $router->get('/signup', [LoginController::class, 'showSignup']);
@@ -27,6 +29,11 @@ $router->get('/change-password', [UserController::class, 'changePassword']);
 // Admin routes
 $router->get('/admin/student-interest', [UserController::class, 'adminStudentInterest']);
 $router->get('/admin/enrollment-updates', [UserController::class, 'adminEnrollmentUpdates']);
+$router->post('/admin/enrollment-updates/add', [AdminController::class, 'addUpdate']);
+$router->post('/admin/enrollment-updates/edit', [AdminController::class, 'editUpdate']);
+$router->post('/admin/enrollment-updates/delete', [AdminController::class, 'deleteUpdate']);
+
+
 $router->get('/admin/management', [AdminController::class, 'management']);
 $router->post('/admin/management/add', [AdminController::class, 'add']);
 $router->post('/admin/management/edit', [AdminController::class, 'edit']);
