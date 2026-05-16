@@ -15,6 +15,48 @@ class LoginController {
         return require __DIR__ . '/../../public/views/auth/login.php';
     }
 
+    public function showAdminLogin() {
+        return require __DIR__ . '/../../public/views/admin/admin-login.php';
+    }
+
+    // Handle admin login form submission
+    public function handleAdminLogin() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo "Method not allowed";
+            return;
+        }
+
+        $email = $_POST['email'] ?? '';
+        $password = $_POST['password'] ?? '';
+
+        if (empty($email) || empty($password)) {
+            $_SESSION['error'] = 'Admin credentials are required';
+            header('Location: /admin/login');
+            exit;
+        }
+
+        // Validate against database
+        $user = $this->userController->login($email, $password);
+        
+        if ($user && ($user['role'] ?? 'student') === 'admin') {
+            $_SESSION['user'] = [
+                'id' => $user['id'],
+                'email' => $user['email'],
+                'first_name' => $user['first_name'],
+                'last_name' => $user['last_name'] ?? '',
+                'role' => 'admin'
+            ];
+            $_SESSION['success'] = 'Admin login successful!';
+            header('Location: /dashboard');
+            exit;
+        } else {
+            $_SESSION['error'] = 'Invalid admin credentials or insufficient privileges';
+            header('Location: /admin/login');
+            exit;
+        }
+    }
+
     // Handle login form submission
     public function handleLogin() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
