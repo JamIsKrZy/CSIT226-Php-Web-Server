@@ -315,9 +315,13 @@
                 });
         }
 
+        let modalCurrentPage = 1;
+        const modalPageSize = 2; // Keep it clean (2 subjects/page) since each subject has multiple sections
+
         function openAddSectionModal() {
             const modal = document.getElementById('add-section-modal');
             document.getElementById('section-search-input').value = ''; // Reset search
+            modalCurrentPage = 1; // Reset to page 1
             
             // Show modal overlay
             modal.classList.add('active');
@@ -345,63 +349,179 @@
         }
 
         function renderModalSectionsTable() {
-            const tbody = document.getElementById('modal-sections-table-body');
-            tbody.innerHTML = '';
-
+            const container = document.getElementById('modal-subjects-container');
+            container.innerHTML = '';
+            
             const searchTerm = document.getElementById('section-search-input').value.toLowerCase().trim();
 
-            const filtered = allSections.filter(sec => {
-                return (sec.courseCode || '').toLowerCase().includes(searchTerm) || 
-                       (sec.courseName || '').toLowerCase().includes(searchTerm) || 
-                       (sec.sectionCode || '').toLowerCase().includes(searchTerm) ||
-                       (sec.instructor || '').toLowerCase().includes(searchTerm);
+            // 1. Group sections by Subject/Course Code
+            const groups = {};
+            allSections.forEach(sec => {
+                const code = sec.courseCode;
+                if (!groups[code]) {
+                    groups[code] = {
+                        courseCode: code,
+                        courseName: sec.courseName,
+                        sections: []
+                    };
+                }
+                
+                // Search matching logic (matches subject or specific section/instructor)
+                const subjectMatches = (sec.courseCode || '').toLowerCase().includes(searchTerm) || 
+                                       (sec.courseName || '').toLowerCase().includes(searchTerm);
+                
+                const sectionMatches = (sec.sectionCode || '').toLowerCase().includes(searchTerm) ||
+                                       (sec.instructor || '').toLowerCase().includes(searchTerm);
+                
+                if (searchTerm === '' || subjectMatches || sectionMatches) {
+                    groups[code].sections.push(sec);
+                }
             });
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 30px; color: var(--text-medium);">No matching sections found.</td></tr>';
+            // Filter out subjects that have 0 sections after filtering
+            let groupedSubjects = Object.values(groups).filter(sub => sub.sections.length > 0);
+
+            if (groupedSubjects.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-medium);"><i class="fa-solid fa-folder-open" style="font-size: 2.5rem; margin-bottom: 12px; display: block; color: var(--text-light);"></i> No matching courses or sections found.</div>';
+                document.getElementById('modal-pagination-controls').style.display = 'none';
                 return;
             }
 
-            filtered.forEach(sec => {
-                // Check if this section is already present in the student's enrollment plan
-                const isAlreadyAdded = enrollmentPlan.some(planItem => planItem.sectionCode === sec.sectionCode);
+            // 2. Paginate Subjects
+            const totalSubjects = groupedSubjects.length;
+            const totalPages = Math.ceil(totalSubjects / modalPageSize);
+            
+            if (modalCurrentPage > totalPages) {
+                modalCurrentPage = totalPages;
+            }
+            if (modalCurrentPage < 1) {
+                modalCurrentPage = 1;
+            }
 
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>
-                        <div class="section-row-info">
-                            <span class="section-row-title" style="font-weight: 600; color: var(--primary-color);">${sec.courseCode}</span>
-                            <span class="section-row-subtitle" style="color: var(--text-light); font-size: 0.8rem; display: block; margin-top: 2px;">${sec.courseName}</span>
-                        </div>
-                    </td>
-                    <td style="font-weight: 500;">${sec.sectionCode}</td>
-                    <td style="font-size: 0.85rem;">
-                        <div style="font-weight: 500;">${sec.timeslot || '---'}</div>
-                        <div style="font-size: 0.75rem; color: var(--text-light); margin-top: 2px;"><i class="fa-solid fa-user-tie"></i> ${sec.instructor || 'Staff'}</div>
-                    </td>
-                    <td>${sec.room || '---'}</td>
-                    <td>
-                        <span style="font-weight: 600; color: ${sec.enrolledCount >= sec.capacity ? 'var(--status-danger)' : 'var(--text-dark)'};">
-                            ${sec.enrolledCount}
-                        </span> / ${sec.capacity}
-                    </td>
-                    <td>
-                        ${isAlreadyAdded ? `
-                            <button class="btn-added-state" disabled>
-                                <i class="fa-solid fa-check"></i> Added
-                            </button>
-                        ` : `
-                            <button class="btn-add-to-plan" onclick="addSectionToPlan(${sec.sectionID}, '${sec.courseCode} ${sec.sectionCode}')">
-                                <i class="fa-solid fa-plus"></i> Add
-                            </button>
-                        `}
-                    </td>
+            const startIndex = (modalCurrentPage - 1) * modalPageSize;
+            const endIndex = startIndex + modalPageSize;
+            const paginatedSubjects = groupedSubjects.slice(startIndex, endIndex);
+
+            // 3. Render Grouped Cards
+            paginatedSubjects.forEach(sub => {
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                
+                let sectionsRowsHtml = '';
+                sub.sections.forEach(sec => {
+                    const isAlreadyAdded = enrollmentPlan.some(planItem => planItem.sectionCode === sec.sectionCode);
+                    const availabilityColor = sec.enrolledCount >= sec.capacity ? 'var(--status-danger)' : 'var(--text-dark)';
+                    
+                    sectionsRowsHtml += `
+                        <tr>
+                            <td style="font-weight: 600; font-size: 0.95rem;">${sec.sectionCode}</td>
+                            <td>
+                                <div style="font-weight: 500; font-size: 0.85rem;">${sec.timeslot || '---'}</div>
+                            </td>
+                            <td style="font-size: 0.85rem; color: var(--text-light);">
+                                <i class="fa-solid fa-user-tie" style="margin-right: 4px;"></i> ${sec.instructor || 'Staff'}
+                            </td>
+                            <td style="font-size: 0.85rem; font-weight: 500;">${sec.room || '---'}</td>
+                            <td style="font-size: 0.85rem;">
+                                <span style="font-weight: 700; color: ${availabilityColor};">${sec.enrolledCount}</span> / ${sec.capacity}
+                            </td>
+                            <td style="text-align: right; padding-right: 20px;">
+                                ${isAlreadyAdded ? `
+                                    <button class="btn-added-state" disabled>
+                                        <i class="fa-solid fa-check"></i> Added
+                                    </button>
+                                ` : `
+                                    <button class="btn-add-to-plan" onclick="addSectionToPlan(${sec.sectionID}, '${sec.courseCode} ${sec.sectionCode}')">
+                                        <i class="fa-solid fa-plus"></i> Add
+                                    </button>
+                                `}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                card.innerHTML = `
+                    <div class="subject-card-header">
+                        <span class="subject-code">${sub.courseCode}</span>
+                        <span class="subject-name">${sub.courseName}</span>
+                    </div>
+                    <div class="subject-card-body">
+                        <table class="modal-data-table">
+                            <thead>
+                                <tr>
+                                    <th>Section</th>
+                                    <th>Schedule</th>
+                                    <th>Instructor</th>
+                                    <th>Room</th>
+                                    <th>Availability</th>
+                                    <th style="text-align: right; padding-right: 20px;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sectionsRowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
                 `;
-                tbody.appendChild(row);
+                container.appendChild(card);
             });
+
+            // 4. Render Pagination Buttons
+            renderPaginationControls(totalPages);
+        }
+
+        function renderPaginationControls(totalPages) {
+            const paginationControls = document.getElementById('modal-pagination-controls');
+            paginationControls.innerHTML = '';
+
+            if (totalPages <= 1) {
+                paginationControls.style.display = 'none';
+                return;
+            }
+
+            paginationControls.style.display = 'flex';
+
+            // Previous button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'btn-page';
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prevBtn.disabled = modalCurrentPage === 1;
+            prevBtn.onclick = () => {
+                if (modalCurrentPage > 1) {
+                    modalCurrentPage--;
+                    renderModalSectionsTable();
+                }
+            };
+            paginationControls.appendChild(prevBtn);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `btn-page ${modalCurrentPage === i ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    modalCurrentPage = i;
+                    renderModalSectionsTable();
+                };
+                paginationControls.appendChild(pageBtn);
+            }
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn-page';
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            nextBtn.disabled = modalCurrentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (modalCurrentPage < totalPages) {
+                    modalCurrentPage++;
+                    renderModalSectionsTable();
+                }
+            };
+            paginationControls.appendChild(nextBtn);
         }
 
         function filterSections() {
+            modalCurrentPage = 1; // Reset to page 1 on active search
             renderModalSectionsTable();
         }
 
@@ -457,24 +577,12 @@
                 <input type="text" id="section-search-input" placeholder="Search by subject code, course title, or instructor..." oninput="filterSections()">
             </div>
             
-            <div class="modal-body">
-                <div class="modal-table-container">
-                    <table class="modal-data-table">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>Section</th>
-                                <th>Schedule</th>
-                                <th>Room</th>
-                                <th>Capacity</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="modal-sections-table-body">
-                            <!-- Loaded via API -->
-                        </tbody>
-                    </table>
-                </div>
+            <div class="modal-body" id="modal-subjects-container">
+                <!-- Grouped Subject Cards Loaded dynamically via Javascript -->
+            </div>
+            
+            <div class="modal-pagination" id="modal-pagination-controls">
+                <!-- Dynamic Pagination Footer -->
             </div>
         </div>
     </div>
@@ -595,11 +703,97 @@
             flex: 1;
         }
 
-        .modal-table-container {
+        /* Grouped Subject Cards Style */
+        .subject-card {
             border: 1px solid var(--border-color, #dddddd);
             border-radius: 8px;
+            margin-bottom: 24px;
             overflow: hidden;
             background: #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+
+        .subject-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+            transform: translateY(-2px);
+        }
+
+        .subject-card-header {
+            background: #fafafa;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-color, #dddddd);
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary-color, #800000);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subject-card-header .subject-code {
+            background: var(--primary-color, #800000);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .subject-card-header .subject-name {
+            color: var(--text-dark, #333333);
+            font-size: 0.95rem;
+        }
+
+        .subject-card-body {
+            padding: 0;
+        }
+
+        /* Dynamic Pagination Footer */
+        .modal-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color, #dddddd);
+            background: #fafafa;
+        }
+
+        .btn-page {
+            background: #fff;
+            border: 1px solid var(--border-color, #dddddd);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark, #333333);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            border-color: var(--primary-color, #800000);
+            color: var(--primary-color, #800000);
+            background: rgba(128, 0, 0, 0.02);
+        }
+
+        .btn-page.active {
+            background: var(--primary-color, #800000);
+            border-color: var(--primary-color, #800000);
+            color: white !important;
+        }
+
+        .btn-page:disabled {
+            color: var(--text-light, #aaaaaa);
+            cursor: not-allowed;
+            background: #f5f5f5;
         }
 
         .modal-data-table {
@@ -611,15 +805,19 @@
 
         .modal-data-table th {
             background: #fafafa;
-            padding: 12px 16px;
+            padding: 10px 16px;
             font-weight: 600;
             color: var(--text-dark, #333333);
             border-bottom: 1px solid var(--border-color, #dddddd);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .modal-data-table td {
-            padding: 14px 16px;
+            padding: 12px 16px;
             border-bottom: 1px solid var(--border-color, #dddddd);
+            vertical-align: middle;
         }
 
         .modal-data-table tr:last-child td {
@@ -627,7 +825,7 @@
         }
 
         .modal-data-table tr:hover td {
-            background: #fafafa;
+            background: #fcfcfc;
         }
 
         /* Action Buttons */
