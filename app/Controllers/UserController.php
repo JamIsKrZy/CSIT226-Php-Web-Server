@@ -93,6 +93,9 @@ class UserController {
             header('Location: /');
             exit;
         }
+
+        $studentID = $this->getStudentIdByUserId((int) ($_SESSION['user']['id'] ?? 0));
+
         return require __DIR__ . '/../../public/views/student/enrollment-plan.php';
     }
 
@@ -105,6 +108,9 @@ class UserController {
             header('Location: /');
             exit;
         }
+
+        $studentID = $this->getStudentIdByUserId((int) ($_SESSION['user']['id'] ?? 0));
+
         return require __DIR__ . '/../../public/views/student/alternative-sections.php';
     }
 
@@ -143,10 +149,25 @@ class UserController {
     }
 
     /**
+     * Resolve the Student table ID for a User account.
+     */
+    public function getStudentIdByUserId(int $userId): ?int {
+        $student = $this->db->queryOne(
+            'SELECT studentID FROM Student WHERE userID = ? LIMIT 1',
+            [$userId]
+        );
+
+        return ($student !== false) ? (int) $student['studentID'] : null;
+    }
+
+    /**
      * Verify login credentials
      */
     public function login($email, $password) {
-        $user = $this->db->queryOne('SELECT userID as id, email, password, firstName as first_name, userType as role FROM User WHERE email = ?', [$email]);
+        $user = $this->db->queryOne(
+            'SELECT userID as id, email, password, firstName as first_name, lastName as last_name, userType as role FROM User WHERE email = ?',
+            [$email]
+        );
         
         if ($user && password_verify($password, $user['password'])) {
             return $user;

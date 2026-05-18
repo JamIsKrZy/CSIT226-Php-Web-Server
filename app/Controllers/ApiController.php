@@ -2,12 +2,15 @@
 namespace App\Controllers;
 
 use App\Core\Database;
+use App\Services\EnrollmentPlanService;
 
 class ApiController {
     private $db;
+    private EnrollmentPlanService $enrollmentPlanService;
 
     public function __construct() {
         $this->db = new Database();
+        $this->enrollmentPlanService = new EnrollmentPlanService();
         header('Content-Type: application/json');
     }
 
@@ -21,6 +24,34 @@ class ApiController {
             'message' => $message,
             'data' => $data
         ]);
+    }
+
+    /**
+     * Resolve student ID from session (students) or optional request param (admins).
+     */
+    protected function resolveStudentId(?int $requestedStudentId = null): ?int {
+        if (!isset($_SESSION['user']['id'])) {
+            return null;
+        }
+
+        $row = $this->db->queryOne(
+            'SELECT studentID FROM Student WHERE userID = ? LIMIT 1',
+            [$_SESSION['user']['id']]
+        );
+
+        if ($row === false) {
+            return null;
+        }
+
+        $sessionStudentId = (int) $row['studentID'];
+
+        if (($requestedStudentId !== null)
+            && (($_SESSION['user']['role'] ?? 'student') === 'admin')
+        ) {
+            return $requestedStudentId;
+        }
+
+        return $sessionStudentId;
     }
 
     // ==================== USER CRUD ====================
@@ -597,24 +628,17 @@ class ApiController {
      * Get student's enrollment plan with sections
      */
     public function getStudentEnrollmentPlan() {
-        $studentID = $_GET['studentID'] ?? null;
+        $studentID = $this->resolveStudentId(
+            isset($_GET['studentID']) ? (int) $_GET['studentID'] : null
+        );
+
         if (!$studentID) {
-            echo $this->response(false, 'Student ID is required', null, 400);
+            echo $this->response(false, 'Student profile not found. Please log in again.', null, 401);
             return;
         }
 
         try {
-            $plan = $this->db->query('
-                SELECT pi.plannedItemID, c.courseCode, c.courseName, c.credits, s.sectionCode, 
-                       s.timeslot, s.room, pi.enrollmentStatus, pi.priority, pi.commitmentLevel
-                FROM PlannedItem pi
-                JOIN Schedule sch ON pi.scheduleID = sch.scheduleID
-                JOIN Section s ON pi.sectionID = s.sectionID
-                JOIN Course c ON s.courseID = c.courseID
-                WHERE sch.studentID = ?
-                ORDER BY c.courseCode
-            ', [$studentID]);
-            
+            $plan = $this->enrollmentPlanService->getEnrollmentPlan($studentID);
             echo $this->response(true, 'Enrollment plan retrieved', $plan, 200);
         } catch (\Exception $e) {
             echo $this->response(false, 'Error fetching plan: ' . $e->getMessage(), null, 500);
@@ -627,34 +651,32 @@ class ApiController {
     public function addSectionToEnrollment() {
         $data = json_decode(file_get_contents('php://input'), true);
 
-        if (!$data || !isset($data['studentID'], $data['sectionID'])) {
-            echo $this->response(false, 'Missing required fields', null, 400);
+        if (!$data || !isset($data['sectionID'])) {
+            echo $this->response(false, 'Section ID is required', null, 400);
+            return;
+        }
+
+        $studentID = $this->resolveStudentId(
+            isset($data['studentID']) ? (int) $data['studentID'] : null
+        );
+
+        if (!$studentID) {
+            echo $this->response(false, 'Student profile not found. Please log in again.', null, 401);
             return;
         }
 
         try {
-            // Get or create schedule
-            $schedule = $this->db->queryOne(
-                'SELECT scheduleID FROM Schedule WHERE studentID = ? AND semester = ? LIMIT 1',
-                [$data['studentID'], $data['semester'] ?? '1st Semester']
-            );
-
-            if (!$schedule) {
-                $this->db->execute(
-                    'INSERT INTO Schedule (studentID, semester, academicYear, status) VALUES (?, ?, ?, ?)',
-                    [$data['studentID'], $data['semester'] ?? '1st Semester', 2026, 'draft']
-                );
-                $scheduleID = $this->db->lastInsertId();
-            } else {
-                $scheduleID = $schedule['scheduleID'];
-            }
-
-            $this->db->execute(
-                'INSERT INTO PlannedItem (scheduleID, sectionID, commitmentLevel, priority) VALUES (?, ?, ?, ?)',
-                [$scheduleID, $data['sectionID'], $data['commitmentLevel'] ?? 5, $data['priority'] ?? 1]
+            $this->enrollmentPlanService->addSectionToPlan(
+                $studentID,
+                (int) $data['sectionID'],
+                $data['semester'] ?? '1st Semester',
+                (int) ($data['commitmentLevel'] ?? 5),
+                (int) ($data['priority'] ?? 1)
             );
 
             echo $this->response(true, 'Section added to enrollment plan', null, 201);
+        } catch (\InvalidArgumentException $e) {
+            echo $this->response(false, $e->getMessage(), null, 400);
         } catch (\Exception $e) {
             echo $this->response(false, 'Error adding section: ' . $e->getMessage(), null, 500);
         }
@@ -672,11 +694,199 @@ class ApiController {
         }
 
         try {
-            $this->db->execute('DELETE FROM PlannedItem WHERE plannedItemID = ?', [$data['plannedItemID']]);
+            $this->enrollmentPlanService->removeSectionFromPlan((int) $data['plannedItemID']);
             echo $this->response(true, 'Section removed from enrollment plan', null, 200);
         } catch (\Exception $e) {
             echo $this->response(false, 'Error removing section: ' . $e->getMessage(), null, 500);
         }
+    }
+
+    /**
+     * Get planned subjects with alternative sections for the student
+     */
+    public function getAlternativeSections() {
+        $studentID = $this->resolveStudentId(
+            isset($_GET['studentID']) ? (int) $_GET['studentID'] : null
+        );
+
+        if (!$studentID) {
+            echo $this->response(false, 'Student profile not found. Please log in again.', null, 401);
+            return;
+        }
+
+        try {
+            $planned = $this->db->query('
+                SELECT pi.plannedItemID, pi.sectionID AS preferredSectionID,
+                       c.courseID, c.courseCode, c.courseName,
+                       s.sectionCode, s.timeslot, s.room, s.capacity
+                FROM PlannedItem pi
+                JOIN Schedule sch ON pi.scheduleID = sch.scheduleID
+                JOIN Section s ON pi.sectionID = s.sectionID
+                JOIN Course c ON s.courseID = c.courseID
+                WHERE sch.studentID = ?
+                ORDER BY c.courseCode
+            ', [$studentID]);
+
+            if (empty($planned)) {
+                echo $this->response(true, 'No planned subjects', [
+                    'subjects' => [],
+                    'stats' => [
+                        'plannedSections' => 0,
+                        'subjectsWithAlternatives' => 0,
+                        'highInterestAlerts' => 0,
+                    ],
+                ], 200);
+                return;
+            }
+
+            $courseIDs = array_unique(array_column($planned, 'courseID'));
+            $placeholders = implode(',', array_fill(0, count($courseIDs), '?'));
+
+            $allSections = $this->db->query("
+                SELECT s.sectionID, s.courseID, s.sectionCode, s.timeslot, s.room, s.capacity,
+                       COUNT(pi.plannedItemID) AS interest
+                FROM Section s
+                LEFT JOIN PlannedItem pi ON s.sectionID = pi.sectionID
+                WHERE s.courseID IN ($placeholders)
+                GROUP BY s.sectionID
+                ORDER BY s.sectionCode
+            ", $courseIDs);
+
+            $sectionsByCourse = [];
+            foreach ($allSections as $section) {
+                $sectionsByCourse[$section['courseID']][] = $section;
+            }
+
+            $subjects = [];
+            $subjectsWithAlternatives = 0;
+            $highInterestAlerts = 0;
+
+            foreach ($planned as $item) {
+                $courseSections = $sectionsByCourse[$item['courseID']] ?? [];
+                $preferred = null;
+                $alternatives = [];
+
+                foreach ($courseSections as $section) {
+                    $sectionData = $this->formatSectionWithDemand($section);
+
+                    if ((int) $section['sectionID'] === (int) $item['preferredSectionID']) {
+                        $preferred = $sectionData;
+                        if ($sectionData['label'] === 'HIGH') {
+                            $highInterestAlerts++;
+                        }
+                    } else {
+                        $alternatives[] = $sectionData;
+                    }
+                }
+
+                if (count($alternatives) > 0) {
+                    $subjectsWithAlternatives++;
+                }
+
+                $subjects[] = [
+                    'plannedItemID' => (int) $item['plannedItemID'],
+                    'courseID' => (int) $item['courseID'],
+                    'code' => $item['courseCode'],
+                    'title' => $item['courseName'],
+                    'preferred' => $preferred,
+                    'alternatives' => $alternatives,
+                ];
+            }
+
+            echo $this->response(true, 'Alternative sections retrieved', [
+                'subjects' => $subjects,
+                'stats' => [
+                    'plannedSections' => count($planned),
+                    'subjectsWithAlternatives' => $subjectsWithAlternatives,
+                    'highInterestAlerts' => $highInterestAlerts,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            echo $this->response(false, 'Error fetching alternative sections: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * Switch a planned item to a different section of the same subject
+     */
+    public function switchPlannedSection() {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data || !isset($data['plannedItemID'], $data['sectionID'])) {
+            echo $this->response(false, 'Planned item ID and section ID are required', null, 400);
+            return;
+        }
+
+        try {
+            $plannedItem = $this->db->queryOne('
+                SELECT pi.plannedItemID, pi.scheduleID, s.courseID AS currentCourseID
+                FROM PlannedItem pi
+                JOIN Section s ON pi.sectionID = s.sectionID
+                WHERE pi.plannedItemID = ?
+            ', [$data['plannedItemID']]);
+
+            if (!$plannedItem) {
+                echo $this->response(false, 'Planned section not found', null, 404);
+                return;
+            }
+
+            $newSection = $this->db->queryOne(
+                'SELECT sectionID, courseID FROM Section WHERE sectionID = ?',
+                [$data['sectionID']]
+            );
+
+            if (!$newSection) {
+                echo $this->response(false, 'Target section not found', null, 404);
+                return;
+            }
+
+            if ((int) $plannedItem['currentCourseID'] !== (int) $newSection['courseID']) {
+                echo $this->response(false, 'Cannot switch to a section from a different subject', null, 400);
+                return;
+            }
+
+            $duplicate = $this->db->queryOne(
+                'SELECT plannedItemID FROM PlannedItem WHERE scheduleID = ? AND sectionID = ? AND plannedItemID != ?',
+                [$plannedItem['scheduleID'], $data['sectionID'], $data['plannedItemID']]
+            );
+
+            if ($duplicate) {
+                echo $this->response(false, 'This section is already in your enrollment plan', null, 400);
+                return;
+            }
+
+            $this->db->execute(
+                'UPDATE PlannedItem SET sectionID = ? WHERE plannedItemID = ?',
+                [$data['sectionID'], $data['plannedItemID']]
+            );
+
+            echo $this->response(true, 'Planned section updated successfully', null, 200);
+        } catch (\Exception $e) {
+            echo $this->response(false, 'Error switching section: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    private function formatSectionWithDemand(array $section): array {
+        $interest = (int) ($section['interest'] ?? 0);
+        $capacity = max((int) ($section['capacity'] ?? 1), 1);
+
+        if ($interest > 20) {
+            $label = 'HIGH';
+        } elseif ($interest > 10) {
+            $label = 'MODERATE';
+        } else {
+            $label = 'LOW';
+        }
+
+        return [
+            'sectionID' => (int) $section['sectionID'],
+            'section' => $section['sectionCode'],
+            'schedule' => $section['timeslot'] ?? 'TBA',
+            'room' => $section['room'] ?? 'TBA',
+            'interest' => $interest,
+            'capacity' => $capacity,
+            'label' => $label,
+        ];
     }
 
     /**

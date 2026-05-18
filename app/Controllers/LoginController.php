@@ -79,11 +79,18 @@ class LoginController {
         $user = $this->userController->login($email, $password);
         
         if ($user) {
+            $studentId = null;
+            if (($user['role'] ?? 'student') === 'student') {
+                $studentId = $this->userController->getStudentIdByUserId((int) $user['id']);
+            }
+
             $_SESSION['user'] = [
                 'id' => $user['id'],
                 'email' => $user['email'],
                 'first_name' => $user['first_name'],
-                'role' => $user['role']
+                'last_name' => $user['last_name'] ?? '',
+                'role' => $user['role'],
+                'student_id' => $studentId,
             ];
             $_SESSION['success'] = 'Login successful!';
             

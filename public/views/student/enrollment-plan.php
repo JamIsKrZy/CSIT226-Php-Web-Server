@@ -163,7 +163,11 @@
     <script>
         let enrollmentPlan = [];
         let allSections = [];
-        let currentStudentID = 1; // Get from session or auth context in production
+        const currentStudentID = <?php echo $studentID !== null ? (int) $studentID : 'null'; ?>;
+
+        function getPlannedCourseIds() {
+            return new Set(enrollmentPlan.map(item => Number(item.courseID)));
+        }
 
         function showToast(message, type = 'success') {
             // Remove existing toast if any
@@ -195,7 +199,13 @@
         }
 
         function loadEnrollmentPlan() {
-            fetch(`/api/student/enrollment-plan?studentID=${currentStudentID}`)
+            if (!currentStudentID) {
+                document.getElementById('enrollment-table-body').innerHTML =
+                    '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--status-danger);">No student profile linked to this account.</td></tr>';
+                return;
+            }
+
+            fetch('/api/student/enrollment-plan')
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
@@ -401,6 +411,7 @@
             const startIndex = (modalCurrentPage - 1) * modalPageSize;
             const endIndex = startIndex + modalPageSize;
             const paginatedSubjects = groupedSubjects.slice(startIndex, endIndex);
+            const plannedCourseIds = getPlannedCourseIds();
 
             // 3. Render Grouped Cards
             paginatedSubjects.forEach(sub => {
@@ -409,11 +420,36 @@
                 
                 let sectionsRowsHtml = '';
                 sub.sections.forEach(sec => {
-                    const isAlreadyAdded = enrollmentPlan.some(planItem => planItem.sectionCode === sec.sectionCode);
+                    const isAlreadyAdded = enrollmentPlan.some(
+                        planItem => Number(planItem.sectionID) === Number(sec.sectionID)
+                    );
+                    const isSubjectBlocked = plannedCourseIds.has(Number(sec.courseID)) && !isAlreadyAdded;
                     const availabilityColor = sec.enrolledCount >= sec.capacity ? 'var(--status-danger)' : 'var(--text-dark)';
-                    
+
+                    let actionButtonHtml;
+                    if (isAlreadyAdded) {
+                        actionButtonHtml = `
+                            <button class="btn-added-state" disabled>
+                                <i class="fa-solid fa-check"></i> Added
+                            </button>
+                        `;
+                    } else if (isSubjectBlocked) {
+                        actionButtonHtml = `
+                            <button class="btn-subject-planned-state" disabled title="You already planned a section for this subject">
+                                <i class="fa-solid fa-ban"></i> Subject Planned
+                            </button>
+                        `;
+                    } else {
+                        const sectionLabel = `${sec.courseCode} ${sec.sectionCode}`.replace(/'/g, "\\'");
+                        actionButtonHtml = `
+                            <button class="btn-add-to-plan" onclick="addSectionToPlan(${sec.sectionID}, '${sectionLabel}')">
+                                <i class="fa-solid fa-plus"></i> Add
+                            </button>
+                        `;
+                    }
+
                     sectionsRowsHtml += `
-                        <tr>
+                        <tr class="${isSubjectBlocked ? 'row-subject-planned' : ''}">
                             <td style="font-weight: 600; font-size: 0.95rem;">${sec.sectionCode}</td>
                             <td>
                                 <div style="font-weight: 500; font-size: 0.85rem;">${sec.timeslot || '---'}</div>
@@ -426,15 +462,7 @@
                                 <span style="font-weight: 700; color: ${availabilityColor};">${sec.enrolledCount}</span> / ${sec.capacity}
                             </td>
                             <td style="text-align: right; padding-right: 20px;">
-                                ${isAlreadyAdded ? `
-                                    <button class="btn-added-state" disabled>
-                                        <i class="fa-solid fa-check"></i> Added
-                                    </button>
-                                ` : `
-                                    <button class="btn-add-to-plan" onclick="addSectionToPlan(${sec.sectionID}, '${sec.courseCode} ${sec.sectionCode}')">
-                                        <i class="fa-solid fa-plus"></i> Add
-                                    </button>
-                                `}
+                                ${actionButtonHtml}
                             </td>
                         </tr>
                     `;
@@ -526,11 +554,15 @@
         }
 
         function addSectionToPlan(sectionID, sectionLabel) {
+            if (!currentStudentID) {
+                showToast('No student profile linked to this account.', 'error');
+                return;
+            }
+
             fetch('/api/student/add-section', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    studentID: currentStudentID,
                     sectionID: sectionID,
                     commitmentLevel: 5,
                     priority: 1,
@@ -868,6 +900,25 @@
             gap: 6px;
             cursor: not-allowed;
             text-transform: uppercase;
+        }
+
+        .btn-subject-planned-state {
+            background-color: #f3f4f6;
+            color: #6b7280;
+            border: 1px solid #e5e7eb;
+            padding: 7px 15px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: not-allowed;
+            text-transform: uppercase;
+        }
+
+        .row-subject-planned {
+            opacity: 0.65;
         }
         
         /* Toast Notifications */
