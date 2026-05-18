@@ -56,21 +56,21 @@ done
 
 # Add planned items (course registrations)
 declare -a planned_items=(
-  "STU001|CS101-A|8|1|planned"
-  "STU001|CS201-A|9|2|planned"
-  "STU001|CS401-A|7|3|planned"
-  "STU002|CS101-B|9|1|planned"
-  "STU002|CS201-B|8|2|planned"
-  "STU002|IT101-A|6|3|planned"
-  "STU003|CS101-A|7|1|planned"
-  "STU003|IT201-A|8|2|planned"
-  "STU003|IT301-A|5|3|planned"
-  "STU004|CS101-B|9|1|planned"
-  "STU004|IT201-A|7|2|planned"
-  "STU004|IT401-A|8|3|planned"
-  "STU005|CS201-A|6|1|planned"
-  "STU005|CS401-A|9|2|planned"
-  "STU005|IT301-A|7|3|planned"
+  "STU001|CS101-A-S1|8|1|planned"
+  "STU001|CS201-A-S1|9|2|planned"
+  "STU001|CS401-A-S1|7|3|planned"
+  "STU002|CS101-B-S1|9|1|planned"
+  "STU002|CS201-B-S1|8|2|planned"
+  "STU002|IT101-A-S1|6|3|planned"
+  "STU003|CS101-A-S1|7|1|planned"
+  "STU003|IT201-A-S1|8|2|planned"
+  "STU003|IT301-A-S1|5|3|planned"
+  "STU004|CS101-B-S1|9|1|planned"
+  "STU004|IT201-A-S1|7|2|planned"
+  "STU004|IT401-A-S1|8|3|planned"
+  "STU005|CS201-A-S1|6|1|planned"
+  "STU005|CS401-A-S1|9|2|planned"
+  "STU005|IT301-A-S1|7|3|planned"
 )
 
 for line in "${planned_items[@]}"; do
