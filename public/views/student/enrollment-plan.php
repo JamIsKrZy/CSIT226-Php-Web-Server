@@ -48,12 +48,13 @@
                     <div class="stat-value"><span id="planned-subjects">0</span> Subjects</div>
                 </div>
 
-                <div class="stat-card">
+                <div class="stat-card" id="conflict-stat-card">
                     <div class="stat-card-header">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>Schedule Conflicts</span>
                     </div>
-                    <div class="stat-value"><span id="conflict-count">0</span> Conflicts</div>
+                    <div class="stat-value" id="conflict-stat-value"><span id="conflict-count">0</span> Conflicts</div>
+                    <p id="conflict-stat-note" style="font-size: 0.8rem; color: var(--text-medium); margin-top: 4px;">No overlapping schedules</p>
                 </div>
 
                 <div class="stat-card">
@@ -146,6 +147,13 @@
                                 </div>
 
                                 <div class="validation-section">
+                                    <h4>Schedule Conflicts</h4>
+                                    <div id="schedule-conflict-list" class="conflict-validation-list">
+                                        <p class="conflict-validation-empty">No schedule conflicts detected.</p>
+                                    </div>
+                                </div>
+
+                                <div class="validation-section">
                                     <h4>Enrollment Readiness</h4>
                                     <div style="margin-top: 10px; padding: 16px; background: #f8f9fa; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
                                         <p style="font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; color: var(--text-medium);">Plan Status: <span id="plan-status">Incomplete</span></p>
@@ -167,6 +175,149 @@
 
         function getPlannedCourseIds() {
             return new Set(enrollmentPlan.map(item => Number(item.courseID)));
+        }
+
+        let scheduleConflicts = [];
+
+        function parseTimeToMinutes(timeStr) {
+            if (!timeStr) return null;
+            const value = timeStr.trim().toUpperCase();
+            const match12 = value.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/);
+            if (match12) {
+                let hours = parseInt(match12[1], 10);
+                const minutes = parseInt(match12[2], 10);
+                if (match12[3] === 'PM' && hours !== 12) hours += 12;
+                if (match12[3] === 'AM' && hours === 12) hours = 0;
+                return hours * 60 + minutes;
+            }
+            const match24 = value.match(/^(\d{1,2}):(\d{2})$/);
+            if (match24) {
+                return parseInt(match24[1], 10) * 60 + parseInt(match24[2], 10);
+            }
+            return null;
+        }
+
+        function parseDayTokens(daysPart) {
+            const days = [];
+            const normalized = (daysPart || '').replace(/\s+/g, '');
+            let index = 0;
+
+            while (index < normalized.length) {
+                const remaining = normalized.slice(index).toLowerCase();
+                if (remaining.startsWith('th')) {
+                    days.push('Thursday');
+                    index += 2;
+                } else if (remaining.startsWith('sat')) {
+                    days.push('Saturday');
+                    index += 3;
+                } else if (remaining.startsWith('sa')) {
+                    days.push('Saturday');
+                    index += 2;
+                } else {
+                    const token = normalized[index].toUpperCase();
+                    const dayMap = {
+                        M: 'Monday',
+                        T: 'Tuesday',
+                        W: 'Wednesday',
+                        F: 'Friday',
+                        S: 'Sunday',
+                    };
+                    if (dayMap[token]) {
+                        days.push(dayMap[token]);
+                    }
+                    index += 1;
+                }
+            }
+
+            return [...new Set(days)];
+        }
+
+        function parseTimeslot(timeslot) {
+            if (!timeslot || timeslot === '---' || timeslot === 'TBA') {
+                return null;
+            }
+
+            const trimmed = timeslot.trim();
+            const timeMatch = trimmed.match(
+                /(\d{1,2}:\d{2}(?:\s*[AP]M)?)\s*-\s*(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i
+            );
+            if (!timeMatch) {
+                return null;
+            }
+
+            const start = parseTimeToMinutes(timeMatch[1]);
+            const end = parseTimeToMinutes(timeMatch[2]);
+            if (start === null || end === null || end <= start) {
+                return null;
+            }
+
+            const daysPart = trimmed.slice(0, trimmed.indexOf(timeMatch[0])).trim();
+            const days = parseDayTokens(daysPart);
+            if (days.length === 0) {
+                return null;
+            }
+
+            return { days, start, end, raw: trimmed };
+        }
+
+        function slotsOverlap(slotA, slotB) {
+            if (!slotA || !slotB) {
+                return false;
+            }
+            const sharedDays = slotA.days.filter(day => slotB.days.includes(day));
+            if (sharedDays.length === 0) {
+                return false;
+            }
+            return slotA.start < slotB.end && slotB.start < slotA.end;
+        }
+
+        function getScheduleConflicts(items) {
+            const conflicts = [];
+            const parsedItems = items.map(item => ({
+                item,
+                slot: parseTimeslot(item.timeslot),
+            }));
+
+            for (let i = 0; i < parsedItems.length; i++) {
+                for (let j = i + 1; j < parsedItems.length; j++) {
+                    const left = parsedItems[i];
+                    const right = parsedItems[j];
+                    if (!left.slot || !right.slot) {
+                        continue;
+                    }
+                    if (slotsOverlap(left.slot, right.slot)) {
+                        conflicts.push({
+                            a: left.item,
+                            b: right.item,
+                            sharedDays: left.slot.days.filter(day => right.slot.days.includes(day)),
+                            message: `${left.item.courseCode} ${left.item.sectionCode} (${left.item.timeslot}) overlaps with ${right.item.courseCode} ${right.item.sectionCode} (${right.item.timeslot})`,
+                        });
+                    }
+                }
+            }
+
+            return conflicts;
+        }
+
+        function getConflictingSectionIds(conflicts) {
+            const ids = new Set();
+            conflicts.forEach(conflict => {
+                ids.add(Number(conflict.a.sectionID));
+                ids.add(Number(conflict.b.sectionID));
+            });
+            return ids;
+        }
+
+        function getAddConflictsForSection(section) {
+            if (!section) {
+                return [];
+            }
+            const newSlot = parseTimeslot(section.timeslot);
+            if (!newSlot) {
+                return [];
+            }
+
+            return enrollmentPlan.filter(item => slotsOverlap(newSlot, parseTimeslot(item.timeslot)));
         }
 
         function showToast(message, type = 'success') {
@@ -224,16 +375,26 @@
         function renderEnrollmentTable() {
             const tbody = document.getElementById('enrollment-table-body');
             tbody.innerHTML = '';
+            scheduleConflicts = getScheduleConflicts(enrollmentPlan);
+            const conflictingSectionIds = getConflictingSectionIds(scheduleConflicts);
 
             if (enrollmentPlan.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-medium);">No sections selected. Select a section to get started.</td></tr>';
                 return;
             }
 
-            enrollmentPlan.forEach((item, index) => {
+            enrollmentPlan.forEach((item) => {
                 const row = document.createElement('tr');
+                const hasConflict = conflictingSectionIds.has(Number(item.sectionID));
+                if (hasConflict) {
+                    row.classList.add('row-schedule-conflict');
+                }
+
                 const statusBadgeColor = item.enrollmentStatus === 'enrolled' ? 'badge-valid' : item.enrollmentStatus === 'pending' ? '#ffc107' : '#6c757d';
                 const statusLabel = item.enrollmentStatus ? item.enrollmentStatus.charAt(0).toUpperCase() + item.enrollmentStatus.slice(1) : 'Pending';
+                const scheduleCell = hasConflict
+                    ? `<span class="schedule-conflict-label"><i class="fa-solid fa-triangle-exclamation"></i> ${item.timeslot || '---'}</span>`
+                    : (item.timeslot || '---');
 
                 row.innerHTML = `
                     <td>
@@ -243,7 +404,7 @@
                         </div>
                     </td>
                     <td>${item.sectionCode}</td>
-                    <td style="font-size: 0.9rem;">${item.timeslot || '---'}</td>
+                    <td style="font-size: 0.9rem;">${scheduleCell}</td>
                     <td>${item.room || '---'}</td>
                     <td>${item.credits}</td>
                     <td><span class="badge" style="background: ${statusBadgeColor}; color: white;">${statusLabel}</span></td>
@@ -270,6 +431,49 @@
             document.getElementById('planned-subjects').textContent = plannedSubjects;
             document.getElementById('selected-units').textContent = totalUnits;
 
+            scheduleConflicts = getScheduleConflicts(enrollmentPlan);
+            const conflictCount = scheduleConflicts.length;
+            const conflictCountEl = document.getElementById('conflict-count');
+            const conflictStatValue = document.getElementById('conflict-stat-value');
+            const conflictStatCard = document.getElementById('conflict-stat-card');
+            const conflictStatNote = document.getElementById('conflict-stat-note');
+            const conflictListEl = document.getElementById('schedule-conflict-list');
+
+            conflictCountEl.textContent = conflictCount;
+
+            if (conflictCount > 0) {
+                if (conflictStatValue) conflictStatValue.style.color = 'var(--status-danger)';
+                if (conflictStatCard) {
+                    conflictStatCard.style.borderColor = '#f5c6cb';
+                    conflictStatCard.classList.add('has-conflicts');
+                }
+                if (conflictStatNote) {
+                    conflictStatNote.textContent = 'Resolve overlapping class times';
+                    conflictStatNote.style.color = 'var(--status-danger)';
+                }
+                if (conflictListEl) {
+                    conflictListEl.innerHTML = scheduleConflicts.map(conflict => `
+                        <div class="conflict-validation-item">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <p>${conflict.message}</p>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                if (conflictStatValue) conflictStatValue.style.color = '';
+                if (conflictStatCard) {
+                    conflictStatCard.style.borderColor = '';
+                    conflictStatCard.classList.remove('has-conflicts');
+                }
+                if (conflictStatNote) {
+                    conflictStatNote.textContent = 'No overlapping schedules';
+                    conflictStatNote.style.color = 'var(--text-medium)';
+                }
+                if (conflictListEl) {
+                    conflictListEl.innerHTML = '<p class="conflict-validation-empty">No schedule conflicts detected.</p>';
+                }
+            }
+
             const maxUnits = 24;
             const progressPercent = Math.min((totalUnits / maxUnits) * 100, 100);
             document.getElementById('unit-progress-bar').style.width = progressPercent + '%';
@@ -289,6 +493,11 @@
                 readinessElement.style.color = 'var(--status-warning)';
                 planStatusElement.textContent = 'Incomplete';
                 planMessageElement.textContent = 'At least 12 units are recommended for full-time status.';
+            } else if (conflictCount > 0) {
+                readinessElement.textContent = 'Has Conflicts';
+                readinessElement.style.color = 'var(--status-danger)';
+                planStatusElement.textContent = 'Conflicts Found';
+                planMessageElement.textContent = `Resolve ${conflictCount} schedule conflict${conflictCount > 1 ? 's' : ''} before enrollment.`;
             } else if (totalUnits <= maxUnits) {
                 readinessElement.textContent = 'Complete';
                 readinessElement.style.color = 'var(--status-valid)';
@@ -441,9 +650,13 @@
                         `;
                     } else {
                         const sectionLabel = `${sec.courseCode} ${sec.sectionCode}`.replace(/'/g, "\\'");
+                        const wouldConflict = getAddConflictsForSection(sec).length > 0;
+                        const conflictHint = wouldConflict
+                            ? ' title="This section may conflict with your current schedule"'
+                            : '';
                         actionButtonHtml = `
-                            <button class="btn-add-to-plan" onclick="addSectionToPlan(${sec.sectionID}, '${sectionLabel}')">
-                                <i class="fa-solid fa-plus"></i> Add
+                            <button class="btn-add-to-plan${wouldConflict ? ' btn-add-conflict-warning' : ''}"${conflictHint} onclick="addSectionToPlan(${sec.sectionID}, '${sectionLabel}')">
+                                <i class="fa-solid fa-${wouldConflict ? 'triangle-exclamation' : 'plus'}"></i> ${wouldConflict ? 'Add (Conflict)' : 'Add'}
                             </button>
                         `;
                     }
@@ -498,6 +711,58 @@
             renderPaginationControls(totalPages);
         }
 
+        /**
+         * Build a compact page list: 1 … 4 5 [6] 7 8 … 22
+         * Shows at most maxVisible numbered buttons between first and last page.
+         */
+        function buildModalPageList(currentPage, totalPages, maxVisible = 5) {
+            if (totalPages <= 1) {
+                return [];
+            }
+
+            if (totalPages <= maxVisible + 2) {
+                return Array.from({ length: totalPages }, (_, i) => i + 1);
+            }
+
+            const pages = [1];
+            let start = Math.max(2, currentPage - Math.floor(maxVisible / 2));
+            let end = Math.min(totalPages - 1, currentPage + Math.floor(maxVisible / 2));
+
+            if (currentPage <= Math.floor(maxVisible / 2) + 1) {
+                start = 2;
+                end = Math.min(totalPages - 1, maxVisible);
+            }
+
+            if (currentPage >= totalPages - Math.floor(maxVisible / 2)) {
+                end = totalPages - 1;
+                start = Math.max(2, totalPages - maxVisible);
+            }
+
+            if (start > 2) {
+                pages.push('ellipsis');
+            }
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (end < totalPages - 1) {
+                pages.push('ellipsis');
+            }
+
+            pages.push(totalPages);
+            return pages;
+        }
+
+        function goToModalPage(page) {
+            modalCurrentPage = page;
+            renderModalSectionsTable();
+            const modalBody = document.querySelector('#add-section-modal .modal-body');
+            if (modalBody) {
+                modalBody.scrollTop = 0;
+            }
+        }
+
         function renderPaginationControls(totalPages) {
             const paginationControls = document.getElementById('modal-pagination-controls');
             paginationControls.innerHTML = '';
@@ -509,43 +774,58 @@
 
             paginationControls.style.display = 'flex';
 
-            // Previous button
+            const info = document.createElement('span');
+            info.className = 'pagination-info';
+            info.textContent = `Page ${modalCurrentPage} of ${totalPages}`;
+            paginationControls.appendChild(info);
+
+            const pagesWrapper = document.createElement('div');
+            pagesWrapper.className = 'modal-pagination-pages';
+
             const prevBtn = document.createElement('button');
             prevBtn.className = 'btn-page';
+            prevBtn.setAttribute('aria-label', 'Previous page');
             prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
             prevBtn.disabled = modalCurrentPage === 1;
             prevBtn.onclick = () => {
                 if (modalCurrentPage > 1) {
-                    modalCurrentPage--;
-                    renderModalSectionsTable();
+                    goToModalPage(modalCurrentPage - 1);
                 }
             };
-            paginationControls.appendChild(prevBtn);
+            pagesWrapper.appendChild(prevBtn);
 
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
+            buildModalPageList(modalCurrentPage, totalPages).forEach(item => {
+                if (item === 'ellipsis') {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.className = 'pagination-ellipsis';
+                    ellipsis.textContent = '…';
+                    ellipsis.setAttribute('aria-hidden', 'true');
+                    pagesWrapper.appendChild(ellipsis);
+                    return;
+                }
+
                 const pageBtn = document.createElement('button');
-                pageBtn.className = `btn-page ${modalCurrentPage === i ? 'active' : ''}`;
-                pageBtn.textContent = i;
-                pageBtn.onclick = () => {
-                    modalCurrentPage = i;
-                    renderModalSectionsTable();
-                };
-                paginationControls.appendChild(pageBtn);
-            }
+                pageBtn.className = `btn-page ${modalCurrentPage === item ? 'active' : ''}`;
+                pageBtn.textContent = item;
+                pageBtn.setAttribute('aria-label', `Page ${item}`);
+                pageBtn.setAttribute('aria-current', modalCurrentPage === item ? 'page' : 'false');
+                pageBtn.onclick = () => goToModalPage(item);
+                pagesWrapper.appendChild(pageBtn);
+            });
 
-            // Next button
             const nextBtn = document.createElement('button');
             nextBtn.className = 'btn-page';
+            nextBtn.setAttribute('aria-label', 'Next page');
             nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
             nextBtn.disabled = modalCurrentPage === totalPages;
             nextBtn.onclick = () => {
                 if (modalCurrentPage < totalPages) {
-                    modalCurrentPage++;
-                    renderModalSectionsTable();
+                    goToModalPage(modalCurrentPage + 1);
                 }
             };
-            paginationControls.appendChild(nextBtn);
+            pagesWrapper.appendChild(nextBtn);
+
+            paginationControls.appendChild(pagesWrapper);
         }
 
         function filterSections() {
@@ -557,6 +837,23 @@
             if (!currentStudentID) {
                 showToast('No student profile linked to this account.', 'error');
                 return;
+            }
+
+            const section = allSections.find(sec => Number(sec.sectionID) === Number(sectionID));
+            const addConflicts = getAddConflictsForSection(section);
+
+            if (addConflicts.length > 0) {
+                const conflictDetails = addConflicts
+                    .map(item => `• ${item.courseCode} ${item.sectionCode} (${item.timeslot || 'TBA'})`)
+                    .join('\n');
+
+                const proceed = confirm(
+                    `This section will conflict with your existing schedule:\n\n${conflictDetails}\n\nAre you sure you want to add it anyway?`
+                );
+
+                if (!proceed) {
+                    return;
+                }
             }
 
             fetch('/api/student/add-section', {
@@ -786,17 +1083,49 @@
         .modal-pagination {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 16px 24px;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 20px;
             border-top: 1px solid var(--border-color, #dddddd);
             background: #fafafa;
+            flex-shrink: 0;
+        }
+
+        .pagination-info {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-medium, #666666);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .modal-pagination-pages {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            flex-wrap: nowrap;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .pagination-ellipsis {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 34px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-light, #999999);
+            user-select: none;
+            letter-spacing: 1px;
         }
 
         .btn-page {
             background: #fff;
             border: 1px solid var(--border-color, #dddddd);
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 4px;
             font-size: 0.85rem;
             font-weight: 600;
@@ -808,6 +1137,7 @@
             justify-content: center;
             min-width: 34px;
             height: 34px;
+            flex-shrink: 0;
         }
 
         .btn-page:hover:not(:disabled) {
@@ -826,6 +1156,22 @@
             color: var(--text-light, #aaaaaa);
             cursor: not-allowed;
             background: #f5f5f5;
+        }
+
+        @media (max-width: 560px) {
+            .modal-pagination {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .pagination-info {
+                text-align: center;
+            }
+
+            .modal-pagination-pages {
+                justify-content: center;
+            }
         }
 
         .modal-data-table {
@@ -885,6 +1231,81 @@
 
         .btn-add-to-plan:active {
             transform: translateY(0);
+        }
+
+        .btn-add-conflict-warning {
+            background-color: #fff4e5;
+            color: #b45309;
+            border: 1px solid #fbbf24;
+        }
+
+        .btn-add-conflict-warning:hover {
+            background-color: #ffedd5;
+            color: #92400e;
+            border-color: #f59e0b;
+            box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2);
+        }
+
+        .row-schedule-conflict {
+            background-color: #fff5f5;
+        }
+
+        .row-schedule-conflict td {
+            border-top: 1px solid #fecaca;
+            border-bottom: 1px solid #fecaca;
+        }
+
+        .schedule-conflict-label {
+            color: var(--status-danger);
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .conflict-validation-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .conflict-validation-empty {
+            font-size: 0.8rem;
+            color: var(--text-medium);
+            margin: 0;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border-color);
+        }
+
+        .conflict-validation-item {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            padding: 12px;
+            background: #fff5f5;
+            border: 1px solid #fecaca;
+            border-radius: var(--radius-sm);
+        }
+
+        .conflict-validation-item i {
+            color: var(--status-danger);
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .conflict-validation-item p {
+            margin: 0;
+            font-size: 0.8rem;
+            color: #7f1d1d;
+            line-height: 1.45;
+        }
+
+        #conflict-stat-card.has-conflicts {
+            border: 1px solid #fecaca;
+            background: #fffbfb;
         }
 
         .btn-added-state {
