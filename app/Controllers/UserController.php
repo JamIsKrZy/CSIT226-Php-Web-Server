@@ -138,7 +138,7 @@ class UserController {
             header('Location: /');
             exit;
         }
-        return require __DIR__ . '/../../public/views/student/change-password.php';
+        return require __DIR__ . '/../../public/views/auth/change-password.php';
     }
 
     /**
