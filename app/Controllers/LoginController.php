@@ -80,8 +80,13 @@ class LoginController {
         
         if ($user) {
             $studentId = null;
+            $studentNumber = null;
             if (($user['role'] ?? 'student') === 'student') {
-                $studentId = $this->userController->getStudentIdByUserId((int) $user['id']);
+                $studentRec = $this->userController->getStudentByUserId((int) $user['id']);
+                if ($studentRec) {
+                    $studentId = (int) $studentRec['studentID'];
+                    $studentNumber = $studentRec['studentNumber'];
+                }
             }
 
             $_SESSION['user'] = [
@@ -91,6 +96,7 @@ class LoginController {
                 'last_name' => $user['last_name'] ?? '',
                 'role' => $user['role'],
                 'student_id' => $studentId,
+                'student_number' => $studentNumber,
             ];
             $_SESSION['success'] = 'Login successful!';
             

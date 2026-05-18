@@ -18,16 +18,16 @@ sql_quote() {
 echo "Seeding notifications..."
 
 declare -a notifications=(
-  "STU001|Enrollment|Your enrollment plan has been created|1"
-  "STU001|Schedule|Your schedule is ready for review|0"
-  "STU002|Enrollment|Enrollment deadline approaching|0"
-  "STU002|Update|Course CS201 section A is now full|1"
-  "STU003|Enrollment|Your enrollment plan has been created|0"
-  "STU003|Schedule|Conflict detected in your schedule|0"
-  "STU004|Enrollment|Your enrollment has been confirmed|1"
-  "STU004|Schedule|New high-demand section available|0"
-  "STU005|Enrollment|Waitlist notification for CS301-A|0"
-  "STU005|Update|Course availability updated|1"
+  "26-0000-000|Enrollment|Your enrollment plan has been created|1"
+  "26-0000-000|Schedule|Your schedule is ready for review|0"
+  "26-0000-001|Enrollment|Enrollment deadline approaching|0"
+  "26-0000-001|Update|Course CS231 section F1 is now full|1"
+  "26-0000-002|Enrollment|Your enrollment plan has been created|0"
+  "26-0000-002|Schedule|Conflict detected in your schedule|0"
+  "26-0000-003|Enrollment|Your enrollment has been confirmed|1"
+  "26-0000-003|Schedule|New high-demand section available|0"
+  "26-0000-004|Enrollment|Waitlist notification for CS231-F1|0"
+  "26-0000-004|Update|Course availability updated|1"
 )
 
 for line in "${notifications[@]}"; do

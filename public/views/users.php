@@ -476,14 +476,8 @@
                         </select>
                     </div>
 
-                    <div class="form-group" id="studentFields" style="display: none;">
-                        <label for="studentNumber">Student Number</label>
-                        <input type="text" id="studentNumber">
-                    </div>
-
-                    <div class="form-group" id="majorField" style="display: none;">
-                        <label for="major">Major</label>
-                        <input type="text" id="major">
+                    <div class="form-group" id="programInfo" style="display: none; background-color: #f7f9fc; padding: 10px; border-left: 3px solid var(--primary-maroon); border-radius: 4px; font-size: 0.9rem;">
+                        <strong>Program:</strong> BS Computer Science (2nd Year, 1st Semester)
                     </div>
 
                     <div class="form-group" id="departmentField" style="display: none;">
@@ -665,8 +659,7 @@
 
         function updateTypeFields() {
             const userType = document.getElementById('userType').value;
-            document.getElementById('studentFields').style.display = userType === 'student' ? 'block' : 'none';
-            document.getElementById('majorField').style.display = userType === 'student' ? 'block' : 'none';
+            document.getElementById('programInfo').style.display = userType === 'student' ? 'block' : 'none';
             document.getElementById('departmentField').style.display = userType === 'admin' ? 'block' : 'none';
             document.getElementById('designationField').style.display = userType === 'admin' ? 'block' : 'none';
         }
@@ -689,8 +682,7 @@
             } else {
                 userData.password = document.getElementById('password').value;
                 if (userData.userType === 'student') {
-                    userData.studentNumber = document.getElementById('studentNumber').value;
-                    userData.major = document.getElementById('major').value;
+                    userData.program = 'BSCS';
                 } else if (userData.userType === 'admin') {
                     userData.department = document.getElementById('department').value;
                     userData.designation = document.getElementById('designation').value;

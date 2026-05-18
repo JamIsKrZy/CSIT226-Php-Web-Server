@@ -74,6 +74,7 @@ $router->delete('/api/admin/delete', [ApiController::class, 'deleteAdmin']);
 $router->get('/api/student/enrollment-plan', [ApiController::class, 'getStudentEnrollmentPlan']);
 $router->get('/api/student/alternative-sections', [ApiController::class, 'getAlternativeSections']);
 $router->put('/api/student/switch-section', [ApiController::class, 'switchPlannedSection']);
+$router->put('/api/student/set-backup-section', [ApiController::class, 'setBackupSection']);
 $router->post('/api/student/add-section', [ApiController::class, 'addSectionToEnrollment']);
 $router->delete('/api/student/remove-section', [ApiController::class, 'removeSectionFromEnrollment']);
 $router->get('/api/student/section-demand', [ApiController::class, 'getSectionDemand']);

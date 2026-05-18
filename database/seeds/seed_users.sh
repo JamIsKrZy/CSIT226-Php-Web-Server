@@ -28,21 +28,20 @@ echo "Seeding users..."
 
 # Student users
 declare -a students=(
-  "John|Doe|john.doe@university.edu|STU001|BSCS|2|25|Computer Science"
-  "Jane|Smith|jane.smith@university.edu|STU002|BSIT|2|30|Information Technology"
-  "Bob|Wilson|bob.wilson@university.edu|STU003|BSCS|1|20|Computer Science"
-  "Alice|Johnson|alice.johnson@university.edu|STU004|BSIT|3|35|Information Technology"
-  "Charlie|Brown|charlie.brown@university.edu|STU005|BSCS|1|28|Computer Science"
+  "John|Doe|john.doe@university.edu|26-0000-000|BSCS|2"
+  "Jane|Smith|jane.smith@university.edu|26-0000-001|BSCS|2"
+  "Bob|Wilson|bob.wilson@university.edu|26-0000-002|BSCS|2"
+  "Alice|Johnson|alice.johnson@university.edu|26-0000-003|BSCS|2"
+  "Charlie|Brown|charlie.brown@university.edu|26-0000-004|BSCS|2"
 )
 
 for line in "${students[@]}"; do
-  IFS='|' read -r firstName lastName email studentNumber program yearLevel points major <<< "$line"
+  IFS='|' read -r firstName lastName email studentNumber program yearLevel <<< "$line"
   
   emailEscaped=$(sql_quote "$email")
   firstNameEscaped=$(sql_quote "$firstName")
   lastNameEscaped=$(sql_quote "$lastName")
   programEscaped=$(sql_quote "$program")
-  majorEscaped=$(sql_quote "$major")
   studentNumberEscaped=$(sql_quote "$studentNumber")
   
   # Check if student record already exists
@@ -68,8 +67,8 @@ for line in "${students[@]}"; do
       INSERT INTO User (firstName, lastName, email, password, academicYear, userType, status) 
       VALUES ('$firstNameEscaped', '$lastNameEscaped', '$emailEscaped', '$passwordHashEscaped', 2026, 'student', 'active');
       SET @lastUserID = LAST_INSERT_ID();
-      INSERT INTO Student (userID, studentNumber, program, yearLevel, points, major) 
-      VALUES (@lastUserID, '$studentNumberEscaped', '$programEscaped', $yearLevel, $points, '$majorEscaped');
+      INSERT INTO Student (userID, studentNumber, program, yearLevel) 
+      VALUES (@lastUserID, '$studentNumberEscaped', '$programEscaped', $yearLevel);
       COMMIT;
     "
     
@@ -82,8 +81,8 @@ for line in "${students[@]}"; do
   else
     # User exists but Student record doesn't, create Student only
     query="
-      INSERT INTO Student (userID, studentNumber, program, yearLevel, points, major) 
-      VALUES ($userID, '$studentNumberEscaped', '$programEscaped', $yearLevel, $points, '$majorEscaped');
+      INSERT INTO Student (userID, studentNumber, program, yearLevel) 
+      VALUES ($userID, '$studentNumberEscaped', '$programEscaped', $yearLevel);
     "
     
     if mysql_exec "$query" > /dev/null 2>&1; then

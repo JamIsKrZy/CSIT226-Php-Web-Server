@@ -21,7 +21,6 @@ class EnrollmentPlanService {
         int $studentID,
         int $sectionID,
         string $semester = '1st Semester',
-        int $commitmentLevel = 5,
         int $priority = 1
     ): int {
         $courseID = $this->repository->getCourseIdBySectionId($sectionID);
@@ -42,7 +41,7 @@ class EnrollmentPlanService {
 
         $scheduleID = $this->repository->getOrCreateScheduleId($studentID, $semester);
 
-        return $this->repository->addPlannedItem($scheduleID, $sectionID, $commitmentLevel, $priority);
+        return $this->repository->addPlannedItem($scheduleID, $sectionID, $priority);
     }
 
     public function removeSectionFromPlan(int $plannedItemID): void {

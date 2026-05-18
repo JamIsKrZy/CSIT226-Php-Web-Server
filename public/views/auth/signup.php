@@ -289,47 +289,11 @@
 
                 <!-- DYNAMIC STUDENT SECTION -->
                 <div id="student-section" class="dynamic-section <?php echo $selectedRole !== 'student' ? 'hidden' : ''; ?>">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="academic_year">Academic Year:</label>
-                            <select id="academic_year" name="academic_year" style="width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; background: white;">
-                                <option value="2026" selected>2026-2027</option>
-                                <option value="2025">2025-2026</option>
-                                <option value="2024">2024-2025</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="student_number">Student Number (Optional):</label>
-                            <input 
-                                type="text" 
-                                id="student_number" 
-                                name="student_number" 
-                                placeholder="e.g., 26-1234-567"
-                            >
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="program">Program (Optional):</label>
-                            <select id="program" name="program" style="width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; background: white;">
-                                <option value="BSCS" selected>BS Computer Science</option>
-                                <option value="BSIT">BS Information Technology</option>
-                                <option value="BSCE">BS Computer Engineering</option>
-                                <option value="ACT">Associate in Computer Tech.</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="major">Major / Specialization (Optional):</label>
-                            <input 
-                                type="text" 
-                                id="major" 
-                                name="major" 
-                                placeholder="e.g., Software Engineering"
-                            >
-                        </div>
+                    <div style="background-color: #f7f9fc; border-left: 4px solid var(--primary-color); padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+                        <p style="color: var(--text-dark); font-size: 0.95rem; margin: 0; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-circle-info" style="color: var(--primary-color); font-size: 1.1rem;"></i>
+                            <span>You will be automatically registered under the <strong>Bachelor of Science in Computer Science (BSCS)</strong> program for <strong>2nd Year, 1st Semester</strong>.</span>
+                        </p>
                     </div>
                 </div>
 

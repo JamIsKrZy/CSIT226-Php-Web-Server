@@ -12,7 +12,7 @@
             <div class="user-profile" id="userProfileBtn">
                 <div class="user-info">
                     <span class="user-name"><?php echo htmlspecialchars(($_SESSION['user']['first_name'] ?? 'Student') . ' ' . ($_SESSION['user']['last_name'] ?? '')); ?></span>
-                    <span class="user-id">Student ID: <?php echo htmlspecialchars($_SESSION['user']['student_id'] ?? '24-1234-567'); ?></span>
+                    <span class="user-id">Student ID: <?php echo htmlspecialchars($_SESSION['user']['student_number'] ?? '26-0000-000'); ?></span>
                 </div>
                 <div class="user-avatar">
                     <?php echo strtoupper(substr($_SESSION['user']['first_name'] ?? 'S', 0, 1)); ?>

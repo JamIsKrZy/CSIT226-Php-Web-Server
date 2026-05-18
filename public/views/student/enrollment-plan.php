@@ -23,7 +23,6 @@
                     <p>Prepare and organize your intended enrollment before official section enrollment begins.</p>
                 </div>
                 <div style="display: flex; gap: 12px;">
-                    <button class="btn btn-outline"><i class="fa-solid fa-floppy-disk"></i> Save Plan</button>
                     <button class="btn btn-primary" onclick="openAddSectionModal()"><i class="fa-solid fa-plus"></i> Add Section</button>
                 </div>
             </div>
@@ -74,6 +73,7 @@
                             <span style="font-size: 0.8rem; color: var(--text-medium);">Selected Sections</span>
                         </div>
                         <div class="card-body" style="padding: 0;">
+                            <div id="waitlist-alerts-container" style="padding: 16px 24px 0 24px; display: none;"></div>
                             <div class="scrollable-card" style="max-height: 500px;">
                                 <table class="data-table">
                                     <thead>
@@ -102,28 +102,10 @@
                         </div>
                         <div class="card-body">
                             <div class="schedule-container">
-                                <div class="schedule-grid">
-                                    <div class="schedule-header">Time</div>
-                                    <div class="schedule-header">Monday</div>
-                                    <div class="schedule-header">Tuesday</div>
-                                    <div class="schedule-header">Wednesday</div>
-                                    <div class="schedule-header">Thursday</div>
-                                    <div class="schedule-header">Friday</div>
-                                    <div class="schedule-header">Saturday</div>
-
-                                    <?php 
-                                    $times = ['7:00 AM', '8:30 AM', '10:00 AM', '11:30 AM', '1:00 PM', '2:30 PM', '4:00 PM'];
-                                    foreach ($times as $time): ?>
-                                        <div class="time-slot time-label"><?php echo $time; ?></div>
-                                        <?php for ($i = 0; $i < 6; $i++): ?>
-                                            <div class="time-slot"></div>
-                                        <?php endfor; ?>
-                                    <?php endforeach; ?>
+                                <div class="schedule-grid" id="weekly-schedule-grid">
+                                    <!-- Loaded dynamically by JavaScript -->
                                 </div>
                             </div>
-                            <p style="text-align: center; color: var(--text-medium); font-size: 0.85rem; margin-top: 20px;">
-                                <i class="fa-solid fa-info-circle"></i> Select sections to visualize your schedule.
-                            </p>
                         </div>
                     </div>
                 </div>
@@ -372,14 +354,140 @@
                 .catch(error => console.error('Error loading enrollment plan:', error));
         }
 
+        function drawSchedule() {
+            const gridContainer = document.getElementById('weekly-schedule-grid');
+            if (!gridContainer) return;
+
+            // Reset grid header
+            gridContainer.innerHTML = `
+                <div class="schedule-header">Time</div>
+                <div class="schedule-header">Monday</div>
+                <div class="schedule-header">Tuesday</div>
+                <div class="schedule-header">Wednesday</div>
+                <div class="schedule-header">Thursday</div>
+                <div class="schedule-header">Friday</div>
+                <div class="schedule-header">Saturday</div>
+            `;
+
+            const standardRows = [
+                { label: '7:00 AM', start: 420, end: 510 },
+                { label: '8:30 AM', start: 510, end: 600 },
+                { label: '10:00 AM', start: 600, end: 690 },
+                { label: '11:30 AM', start: 690, end: 780 },
+                { label: '1:00 PM', start: 780, end: 870 },
+                { label: '2:30 PM', start: 870, end: 960 },
+                { label: '4:00 PM', start: 960, end: 1050 }
+            ];
+
+            const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+            // Parse all planned item timeslots
+            const parsedItems = enrollmentPlan.map(item => ({
+                item,
+                slot: parseTimeslot(item.timeslot)
+            })).filter(x => x.slot !== null);
+
+            // Get conflicting sections
+            const conflictingSectionIds = getConflictingSectionIds(scheduleConflicts);
+
+            standardRows.forEach(row => {
+                // Time label
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'time-slot time-label';
+                labelDiv.textContent = row.label;
+                gridContainer.appendChild(labelDiv);
+
+                // Day columns
+                daysOfWeek.forEach(day => {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.className = 'time-slot';
+
+                    // Find overlapping sections
+                    const matching = parsedItems.filter(p => {
+                        const dayMatch = p.slot.days.includes(day);
+                        if (!dayMatch) return false;
+                        return p.slot.start < row.end && row.start < p.slot.end;
+                    });
+
+                    if (matching.length > 0) {
+                        matching.forEach(p => {
+                            const block = document.createElement('div');
+                            const isConflicting = conflictingSectionIds.has(Number(p.item.sectionID));
+                            
+                            const capacity = Number(p.item.capacity || 40);
+                            const studentsBefore = Number(p.item.studentsBefore || 0);
+                            const isOnWaitlist = studentsBefore >= capacity;
+                            const waitlistPos = studentsBefore - capacity + 1;
+
+                            let waitlistIndicator = '';
+                            let blockStyle = '';
+                            if (isOnWaitlist) {
+                                waitlistIndicator = `<div style="font-size: 0.65rem; color: #fc8181; font-weight: 700; display: inline-flex; align-items: center; gap: 2px;"><i class="fa-solid fa-clock"></i> WL #${waitlistPos}</div>`;
+                                blockStyle = 'border-left: 3px solid #e53e3e;';
+                            } else {
+                                waitlistIndicator = `<div style="font-size: 0.65rem; color: #68d391; font-weight: 700; display: inline-flex; align-items: center; gap: 2px;"><i class="fa-solid fa-check"></i> Secured</div>`;
+                            }
+
+                            block.className = `schedule-block${isConflicting ? ' conflict' : ''}`;
+                            if (blockStyle) {
+                                block.setAttribute('style', blockStyle);
+                            }
+                            block.innerHTML = `
+                                <div style="font-weight: 700; font-size: 0.75rem;">${p.item.courseCode}</div>
+                                <div style="font-size: 0.7rem; opacity: 0.95;">Sec ${p.item.sectionCode}</div>
+                                <div style="font-size: 0.65rem; opacity: 0.85;"><i class="fa-solid fa-location-dot"></i> ${p.item.room || 'TBA'}</div>
+                                ${waitlistIndicator}
+                            `;
+                            cellDiv.appendChild(block);
+                        });
+                    }
+                    gridContainer.appendChild(cellDiv);
+                });
+            });
+        }
+
         function renderEnrollmentTable() {
             const tbody = document.getElementById('enrollment-table-body');
             tbody.innerHTML = '';
             scheduleConflicts = getScheduleConflicts(enrollmentPlan);
             const conflictingSectionIds = getConflictingSectionIds(scheduleConflicts);
 
+            // Dynamic Waitlist Alerts
+            const waitlistAlerts = enrollmentPlan.filter(item => {
+                const capacity = Number(item.capacity || 40);
+                const studentsBefore = Number(item.studentsBefore || 0);
+                return studentsBefore >= capacity;
+            });
+
+            const alertsContainer = document.getElementById('waitlist-alerts-container');
+            if (alertsContainer) {
+                if (waitlistAlerts.length > 0) {
+                    let alertHtml = '';
+                    waitlistAlerts.forEach(item => {
+                        const capacity = Number(item.capacity || 40);
+                        const studentsBefore = Number(item.studentsBefore || 0);
+                        const pos = studentsBefore - capacity + 1;
+                        alertHtml += `
+                            <div class="alert alert-warning" style="margin-bottom: 12px; display: flex; align-items: flex-start; gap: 12px; background: #fff9e6; border: 1px solid #ffeeba; border-radius: 6px; padding: 12px 16px; color: #856404; font-size: 0.85rem; line-height: 1.4;">
+                                <i class="fa-solid fa-triangle-exclamation" style="font-size: 1.15rem; color: #d35400; margin-top: 2px;"></i>
+                                <div style="flex: 1;">
+                                    <strong>Section ${item.sectionCode} for ${item.courseCode} (${item.courseName}) is currently over capacity (40 slots).</strong><br>
+                                    You are currently at <strong>Waitlist Position #${pos}</strong>.
+                                    We highly recommend selecting a backup section in the <a href="/alternative-sections" style="color: #c0392b; font-weight: 700; text-decoration: underline;">Alternative Sections</a> tab to secure your timetable!
+                                </div>
+                            </div>
+                        `;
+                    });
+                    alertsContainer.innerHTML = alertHtml;
+                    alertsContainer.style.display = 'block';
+                } else {
+                    alertsContainer.style.display = 'none';
+                }
+            }
+
             if (enrollmentPlan.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-medium);">No sections selected. Select a section to get started.</td></tr>';
+                drawSchedule();
                 return;
             }
 
@@ -390,8 +498,18 @@
                     row.classList.add('row-schedule-conflict');
                 }
 
-                const statusBadgeColor = item.enrollmentStatus === 'enrolled' ? 'badge-valid' : item.enrollmentStatus === 'pending' ? '#ffc107' : '#6c757d';
-                const statusLabel = item.enrollmentStatus ? item.enrollmentStatus.charAt(0).toUpperCase() + item.enrollmentStatus.slice(1) : 'Pending';
+                const capacity = Number(item.capacity || 40);
+                const studentsBefore = Number(item.studentsBefore || 0);
+                const isOnWaitlist = studentsBefore >= capacity;
+                const waitlistPos = studentsBefore - capacity + 1;
+
+                let statusBadge;
+                if (isOnWaitlist) {
+                    statusBadge = `<span class="badge" style="background: #fde8e8; color: #e53e3e; border: 1px solid #fed7d7; font-weight: 600;">Waitlist #${waitlistPos}</span>`;
+                } else {
+                    statusBadge = `<span class="badge" style="background: #def7ec; color: #03543f; border: 1px solid #bdf5db; font-weight: 600;">Secured</span>`;
+                }
+
                 const scheduleCell = hasConflict
                     ? `<span class="schedule-conflict-label"><i class="fa-solid fa-triangle-exclamation"></i> ${item.timeslot || '---'}</span>`
                     : (item.timeslot || '---');
@@ -407,16 +525,17 @@
                     <td style="font-size: 0.9rem;">${scheduleCell}</td>
                     <td>${item.room || '---'}</td>
                     <td>${item.credits}</td>
-                    <td><span class="badge" style="background: ${statusBadgeColor}; color: white;">${statusLabel}</span></td>
+                    <td>${statusBadge}</td>
                     <td>
                         <button class="btn btn-outline" style="padding: 4px 8px; font-size: 0.75rem; color: var(--status-danger);" 
                             onclick="removeSection(${item.plannedItemID})">
-                            <i class="fa-solid fa-trash-can"></i> Remove
+                                <i class="fa-solid fa-trash-can"></i> Remove
                         </button>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
+            drawSchedule();
         }
 
         function updateStats() {
