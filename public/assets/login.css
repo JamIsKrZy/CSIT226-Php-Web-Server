@@ -257,3 +257,27 @@ body {
     color: #15803d;
     border: 1px solid #bbf7d0;
 }
+
+/* Custom Registration Button Hover Effects */
+.btn-register {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.btn-register.student-btn:hover {
+    background-color: var(--primary-hover) !important;
+    border-color: var(--primary-hover) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(128, 0, 0, 0.3);
+}
+
+.btn-register.admin-btn:hover {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(128, 0, 0, 0.15);
+}
+
+.btn-register:active {
+    transform: translateY(0);
+}
+

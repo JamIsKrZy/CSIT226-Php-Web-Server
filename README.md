@@ -20,8 +20,9 @@ A modern, responsive, and secure enrollment management system built with PHP, My
     docker-compose up -d
     ```
 
-3.  **Initialize Database:**
+3.  **Initialize & Sync Database:**
     ```bash
+    # Run this whenever new migrations or seeds are added
     docker exec php-app bash /var/www/html/database/setup.sh
     ```
 
@@ -33,7 +34,7 @@ A modern, responsive, and secure enrollment management system built with PHP, My
 
 | Role | Email | Password |
 | :--- | :--- | :--- |
-| **Admin** | `admin@cit.edu` | `admin123` |
+| **Admin** | `m.santos@cit.edu` | `password` |
 | **Student** | `demo@example.com` | `password123` |
 
 ---
@@ -47,11 +48,12 @@ A modern, responsive, and secure enrollment management system built with PHP, My
 - **Alternative Sections:** Quick access to backup class options.
 - **Account Security:** Integrated password management system.
 
-### 💼 Admin Management
-- **Student Interest Monitoring:** Detailed analytics on course and section demand.
-- **Enrollment Updates:** Dynamic CRUD interface for publishing system-wide announcements.
-- **Admin Management:** Secure portal for managing administrative staff accounts and roles.
-- **Secure Authentication:** Dedicated admin login flow with role-based access control (RBAC).
+### 💼 Admin Management System (Integrated)
+- **Unified Authentication:** Dedicated secure login flow for administrators.
+- **Student Interest Analytics:** Real-time demand tracking for courses and sections.
+- **Announcement Engine (CRUD):** Full management system for publishing and editing system-wide enrollment updates.
+- **Staff Management (CRUD):** Comprehensive tools for managing administrative accounts and security roles.
+- **Role-Based Access Control (RBAC):** Middleware-protected routes ensuring data security between students and staff.
 
 ---
 
@@ -59,11 +61,11 @@ A modern, responsive, and secure enrollment management system built with PHP, My
 
 ```text
 ├── app/
-│   ├── Controllers/       # Logic for Admin, Student, and Auth flows
+│   ├── Controllers/       # Integrated logic for Admin, Student, and Auth flows
 │   ├── Core/              # Router and Database abstraction layers
 ├── database/
-│   ├── migration/         # SQL schema definitions
-│   └── seeds/             # Initial data for testing
+│   ├── migration/         # SQL schema definitions (v002 updated)
+│   └── seeds/             # Initial data for testing (including Admin credentials)
 ├── public/
 │   ├── assets/            # CSS (Maroon & Gold theme), JS, and Images
 │   ├── views/             # Structured UI Templates
@@ -72,14 +74,14 @@ A modern, responsive, and secure enrollment management system built with PHP, My
 │   │   ├── student/       # Student dashboard and planning tools
 │   │   └── partials/      # Reusable components (Sidebar, Navbar)
 ├── routes/
-│   └── web.php            # Clean URL route definitions
+│   └── web.php            # Unified clean URL route definitions
 └── docker/                # Environment configuration
 ```
 
 ## 💻 Tech Stack
 
 -   **Backend:** PHP 8.2 (MVC Architecture)
--   **Database:** MySQL 8.0
+-   **Database:** MySQL 8.0 (PDO Abstraction)
 -   **Frontend:** HTML5, Vanilla CSS3 (Custom Design System), JavaScript
 -   **Infrastructure:** Docker, Apache (mod_rewrite)
 
@@ -92,8 +94,7 @@ A modern, responsive, and secure enrollment management system built with PHP, My
 | `docker-compose up -d` | Start all services in background |
 | `docker-compose logs -f` | Tail application logs |
 | `docker-compose down -v` | Stop services and remove volumes |
-| `docker exec php-app bash /var/www/html/database/setup.sh` | Reset and seed database |
-| `mysql -h 127.0.0.1 -P 3306 -u root -p` | Connect database |
+| `docker exec php-app bash /var/www/html/database/setup.sh` | Reset and sync database |
 
 ---
 
