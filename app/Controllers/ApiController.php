@@ -127,9 +127,22 @@ class ApiController {
 
             // If student, create student record
             if ($userType === 'student') {
+                // Generate student number starting with 26-0000-000
+                $lastStudent = $this->db->queryOne("SELECT studentNumber FROM Student WHERE studentNumber LIKE '26-%-%' ORDER BY studentNumber DESC LIMIT 1");
+                if ($lastStudent && isset($lastStudent['studentNumber'])) {
+                    $lastNumStr = str_replace('-', '', substr($lastStudent['studentNumber'], 3));
+                    $nextNum = ((int)$lastNumStr) + 1;
+                } else {
+                    $nextNum = 0;
+                }
+                $padded = sprintf('%07d', $nextNum);
+                $studentNumber = '26-' . substr($padded, 0, 4) . '-' . substr($padded, 4);
+
+                $program = 'BSCS';
+
                 $this->db->execute(
-                    'INSERT INTO Student (userID, points, studentNumber, major) VALUES (?, ?, ?, ?)',
-                    [$userID, 0, $data['studentNumber'] ?? null, $data['major'] ?? null]
+                    'INSERT INTO Student (userID, studentNumber, program, yearLevel) VALUES (?, ?, ?, 2)',
+                    [$userID, $studentNumber, $program]
                 );
             }
 
@@ -330,7 +343,8 @@ class ApiController {
     public function getSections() {
         try {
             $sections = $this->db->query('
-                SELECT s.sectionID, s.courseID, s.sectionCode, s.timeslot, s.room, s.capacity, s.enrolledCount, 
+                SELECT s.sectionID, s.courseID, s.sectionCode, s.timeslot, s.room, s.capacity, 
+                       (SELECT COUNT(*) FROM PlannedItem pi WHERE pi.sectionID = s.sectionID) AS enrolledCount, 
                        s.instructor, s.semester, c.courseName, c.courseCode
                 FROM Section s
                 JOIN Course c ON s.courseID = c.courseID
@@ -391,7 +405,7 @@ class ApiController {
             $params = [];
             $fields = [];
 
-            foreach (['sectionCode', 'timeslot', 'room', 'capacity', 'enrolledCount', 'instructor', 'semester'] as $field) {
+            foreach (['sectionCode', 'timeslot', 'room', 'capacity', 'instructor', 'semester'] as $field) {
                 if (isset($data[$field])) {
                     $fields[] = "$field = ?";
                     $params[] = $data[$field];
@@ -670,7 +684,6 @@ class ApiController {
                 $studentID,
                 (int) $data['sectionID'],
                 $data['semester'] ?? '1st Semester',
-                (int) ($data['commitmentLevel'] ?? 5),
                 (int) ($data['priority'] ?? 1)
             );
 
@@ -716,7 +729,7 @@ class ApiController {
 
         try {
             $planned = $this->db->query('
-                SELECT pi.plannedItemID, pi.sectionID AS preferredSectionID,
+                SELECT pi.plannedItemID, pi.sectionID AS preferredSectionID, pi.backupSectionID,
                        c.courseID, c.courseCode, c.courseName,
                        s.sectionCode, s.timeslot, s.room, s.capacity
                 FROM PlannedItem pi
@@ -789,6 +802,7 @@ class ApiController {
                     'code' => $item['courseCode'],
                     'title' => $item['courseName'],
                     'preferred' => $preferred,
+                    'backupSectionID' => $item['backupSectionID'] ? (int) $item['backupSectionID'] : null,
                     'alternatives' => $alternatives,
                 ];
             }
@@ -803,6 +817,65 @@ class ApiController {
             ], 200);
         } catch (\Exception $e) {
             echo $this->response(false, 'Error fetching alternative sections: ' . $e->getMessage(), null, 500);
+        }
+    }
+
+    /**
+     * Set a backup section for a planned item
+     */
+    public function setBackupSection() {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data || !isset($data['plannedItemID'])) {
+            echo $this->response(false, 'Planned item ID is required', null, 400);
+            return;
+        }
+
+        $plannedItemID = (int) $data['plannedItemID'];
+        $backupSectionID = isset($data['sectionID']) && $data['sectionID'] !== null ? (int) $data['sectionID'] : null;
+
+        try {
+            // Verify planned item exists
+            $plannedItem = $this->db->queryOne('
+                SELECT pi.plannedItemID, pi.scheduleID, s.courseID
+                FROM PlannedItem pi
+                JOIN Section s ON pi.sectionID = s.sectionID
+                WHERE pi.plannedItemID = ?
+            ', [$plannedItemID]);
+
+            if (!$plannedItem) {
+                echo $this->response(false, 'Planned section not found', null, 404);
+                return;
+            }
+
+            if ($backupSectionID !== null) {
+                // Verify new backup section exists and belongs to the same course
+                $newSection = $this->db->queryOne(
+                    'SELECT sectionID, courseID FROM Section WHERE sectionID = ?',
+                    [$backupSectionID]
+                );
+
+                if (!$newSection) {
+                    echo $this->response(false, 'Backup section not found', null, 404);
+                    return;
+                }
+
+                if ((int) $newSection['courseID'] !== (int) $plannedItem['courseID']) {
+                    echo $this->response(false, 'Backup section must belong to the same course/subject', null, 400);
+                    return;
+                }
+            }
+
+            // Update backupSectionID
+            $this->db->execute('
+                UPDATE PlannedItem
+                SET backupSectionID = ?, updatedAt = CURRENT_TIMESTAMP
+                WHERE plannedItemID = ?
+            ', [$backupSectionID, $plannedItemID]);
+
+            echo $this->response(true, 'Backup section successfully updated', null, 200);
+        } catch (\Exception $e) {
+            echo $this->response(false, 'Error setting backup section: ' . $e->getMessage(), null, 500);
         }
     }
 
@@ -905,7 +978,8 @@ class ApiController {
 
             $sections = $this->db->query('
                 SELECT s.sectionID, s.sectionCode, s.timeslot, s.room, 
-                       s.enrolledCount, s.capacity, c.courseCode, c.courseName
+                       (SELECT COUNT(*) FROM PlannedItem pi WHERE pi.sectionID = s.sectionID) AS enrolledCount, 
+                       s.capacity, c.courseCode, c.courseName
                 FROM Section s
                 JOIN Course c ON s.courseID = c.courseID
                 ORDER BY s.sectionCode

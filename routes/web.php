@@ -25,6 +25,7 @@ $router->get('/enrollment-plan', [UserController::class, 'enrollmentPlan']);
 $router->get('/alternative-sections', [UserController::class, 'alternativeSections']);
 $router->get('/enrollment-updates', [UserController::class, 'enrollmentUpdates']);
 $router->get('/change-password', [UserController::class, 'changePassword']);
+$router->post('/handle-change-password', [UserController::class, 'handleChangePassword']);
 
 // Admin routes
 $router->get('/admin/student-interest', [UserController::class, 'adminStudentInterest']);
@@ -74,6 +75,7 @@ $router->delete('/api/admin/delete', [ApiController::class, 'deleteAdmin']);
 $router->get('/api/student/enrollment-plan', [ApiController::class, 'getStudentEnrollmentPlan']);
 $router->get('/api/student/alternative-sections', [ApiController::class, 'getAlternativeSections']);
 $router->put('/api/student/switch-section', [ApiController::class, 'switchPlannedSection']);
+$router->put('/api/student/set-backup-section', [ApiController::class, 'setBackupSection']);
 $router->post('/api/student/add-section', [ApiController::class, 'addSectionToEnrollment']);
 $router->delete('/api/student/remove-section', [ApiController::class, 'removeSectionFromEnrollment']);
 $router->get('/api/student/section-demand', [ApiController::class, 'getSectionDemand']);

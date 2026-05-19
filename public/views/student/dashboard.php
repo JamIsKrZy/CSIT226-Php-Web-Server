@@ -19,112 +19,109 @@
         <div class="content-wrapper">
             <div class="page-header">
                 <h2>Pre-Enrollment Dashboard</h2>
-                <p>1st Semester, AY 2026-2027</p>
+                <p><?= htmlspecialchars($semesterName ?? '1st Semester') ?>, AY <?= htmlspecialchars($academicYear ?? 2026) ?>-<?= htmlspecialchars(($academicYear ?? 2026) + 1) ?></p>
             </div>
 
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-card-header">
-                        <i class="fa-solid fa-book-open"></i>
+                        <i class="fa-solid fa-book-open" style="color: var(--primary-maroon);"></i>
                         <span>Planned Units</span>
                     </div>
-                    <div class="stat-value">15 / 24</div>
+                    <div class="stat-value"><?= (int)$totalPlannedUnits ?> / 24</div>
                     <div class="stat-progress">
-                        <div class="stat-progress-bar" style="width: 62.5%;"></div>
+                        <div class="stat-progress-bar" style="width: <?= min(100, max(0, ((int)$totalPlannedUnits / 24) * 100)) ?>%;"></div>
                     </div>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-card-header">
-                        <i class="fa-solid fa-fire"></i>
+                        <i class="fa-solid fa-fire" style="color: #e67e22;"></i>
                         <span>High Demand Sections</span>
                     </div>
-                    <div class="stat-value">2 <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-medium);">out of 5 planned</span></div>
+                    <div class="stat-value"><?= (int)$highDemandCount ?> <span style="font-size: 0.9rem; font-weight: 500; color: var(--text-medium);">out of <?= (int)$totalPlannedCount ?> planned</span></div>
                 </div>
 
                 <div class="stat-card">
                     <div class="stat-card-header">
-                        <i class="fa-solid fa-circle-check"></i>
+                        <i class="fa-solid fa-circle-check" style="color: #2ecc71;"></i>
                         <span>Enrollment Readiness</span>
                     </div>
-                    <div class="stat-value">75%</div>
-                    <p style="font-size: 0.8rem; color: var(--text-medium);">Good to proceed</p>
+                    <div class="stat-value"><?= (int)$readinessPercent ?>%</div>
+                    <p style="font-size: 0.8rem; color: var(--text-medium); margin-top: 4px; font-weight: 500;"><?= htmlspecialchars($readinessText ?? 'Add courses to start') ?></p>
                 </div>
             </div>
 
             <div class="dashboard-main-grid">
                 <div class="left-col">
                     <div class="card">
-                        <div class="card-header">
+                        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                             <h3>Selected Sections</h3>
-                            <span style="font-size: 0.8rem; color: var(--text-medium);">5 courses</span>
+                            <span style="font-size: 0.8rem; color: var(--text-medium); font-weight: 600;"><?= (int)$totalPlannedCount ?> <?= $totalPlannedCount == 1 ? 'course' : 'courses' ?></span>
                         </div>
                         <div class="card-body" style="padding: 0;">
                             <div class="scrollable-card" style="max-height: 400px;">
-                                <table class="data-table">
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <div class="section-row-info">
-                                                    <span class="section-row-title">CSIT122 — Intermediate Programming II</span>
-                                                    <span class="section-row-subtitle">Section F1  •  MWF 8:00-10:00 AM  •  Room 301</span>
-                                                </div>
-                                            </td>
-                                            <td style="text-align: right;">
-                                                <span class="badge badge-high">High</span>
-                                            </td>
-                                            <td style="text-align: right; font-weight: 600;">3 units</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="section-row-info">
-                                                    <span class="section-row-title">CSIT228 — Database Management Systems</span>
-                                                    <span class="section-row-subtitle">Section F1  •  TTH 1:00-2:30 PM  •  Room 205</span>
-                                                </div>
-                                            </td>
-                                            <td style="text-align: right;">
-                                                <span class="badge badge-high">High</span>
-                                            </td>
-                                            <td style="text-align: right; font-weight: 600;">3 units</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="section-row-info">
-                                                    <span class="section-row-title">MATH215 — Discrete Mathematics</span>
-                                                    <span class="section-row-subtitle">Section F2  •  MWF 10:00-11:00 AM  •  Room 108</span>
-                                                </div>
-                                            </td>
-                                            <td style="text-align: right;">
-                                                <span class="badge badge-moderate">Moderate</span>
-                                            </td>
-                                            <td style="text-align: right; font-weight: 600;">3 units</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="section-row-info">
-                                                    <span class="section-row-title">CSI1221 — Computer Architecture</span>
-                                                    <span class="section-row-subtitle">Section F1  •  TTH 10:00-11:30 AM  •  Room 412</span>
-                                                </div>
-                                            </td>
-                                            <td style="text-align: right;">
-                                                <span class="badge badge-low">Low</span>
-                                            </td>
-                                            <td style="text-align: right; font-weight: 600;">3 units</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="section-row-info">
-                                                    <span class="section-row-title">ENGL201 — Technical Writing</span>
-                                                    <span class="section-row-subtitle">Section F3  •  MW 2:00-3:30 PM  •  Room 203</span>
-                                                </div>
-                                            </td>
-                                            <td style="text-align: right;">
-                                                <span class="badge badge-moderate">Moderate</span>
-                                            </td>
-                                            <td style="text-align: right; font-weight: 600;">3 units</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <?php if (empty($plannedSections)): ?>
+                                    <div style="padding: 48px 24px; text-align: center; color: var(--text-medium);">
+                                        <i class="fa-solid fa-calendar-plus" style="font-size: 3rem; color: var(--border-color); margin-bottom: 16px; display: block;"></i>
+                                        <p style="margin: 0 0 16px 0; font-size: 0.95rem;">You haven't added any sections to your enrollment plan yet.</p>
+                                        <a href="/enrollment-plan" class="btn" style="display: inline-block; background-color: var(--primary-maroon); color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 0.85rem; transition: background-color 0.2s;">Build Enrollment Plan</a>
+                                    </div>
+                                <?php else: ?>
+                                    <table class="data-table">
+                                        <tbody>
+                                            <?php foreach ($plannedSections as $sec): ?>
+                                                <?php
+                                                    $capacity = max((int)$sec['capacity'], 1);
+                                                    $enrolled = (int)$sec['enrolledCount'];
+                                                    $studentsBefore = (int)($sec['studentsBefore'] ?? 0);
+                                                    $isOnWaitlist = $studentsBefore >= $capacity;
+                                                    $waitlistPos = $studentsBefore - $capacity + 1;
+
+                                                    $fillPercent = ($enrolled / $capacity) * 100;
+                                                    if ($fillPercent >= 80) {
+                                                        $badgeClass = 'badge-high';
+                                                        $demandLabel = 'High';
+                                                    } elseif ($fillPercent >= 50) {
+                                                        $badgeClass = 'badge-moderate';
+                                                        $demandLabel = 'Moderate';
+                                                    } else {
+                                                        $badgeClass = 'badge-low';
+                                                        $demandLabel = 'Low';
+                                                    }
+                                                ?>
+                                                <tr>
+                                                    <td>
+                                                        <div class="section-row-info">
+                                                            <span class="section-row-title" style="font-weight: 600;"><?= htmlspecialchars($sec['courseCode'] . ' — ' . $sec['courseName']) ?></span>
+                                                            <span class="section-row-subtitle" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                                                <span>Section <?= htmlspecialchars($sec['sectionCode']) ?></span>
+                                                                <span>•</span>
+                                                                <span><?= htmlspecialchars($sec['timeslot'] ?: 'TBA') ?></span>
+                                                                <span>•</span>
+                                                                <span><?= htmlspecialchars($sec['room'] ?: 'TBA') ?></span>
+                                                                <span>•</span>
+                                                                <?php if ($isOnWaitlist): ?>
+                                                                    <span style="color: #e53e3e; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                                                        <i class="fa-solid fa-clock-rotate-left"></i> Waitlist #<?= $waitlistPos ?>
+                                                                    </span>
+                                                                <?php else: ?>
+                                                                    <span style="color: #38a169; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                                                                        <i class="fa-solid fa-circle-check"></i> Secured
+                                                                    </span>
+                                                                <?php endif; ?>
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td style="text-align: right; vertical-align: middle;">
+                                                        <span class="badge <?= $badgeClass ?>"><?= $demandLabel ?></span>
+                                                    </td>
+                                                    <td style="text-align: right; font-weight: 600; white-space: nowrap; vertical-align: middle; padding-right: 16px;"><?= htmlspecialchars($sec['credits']) ?> <?= $sec['credits'] == 1 ? 'unit' : 'units' ?></td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -137,46 +134,60 @@
                         </div>
                         <div class="card-body" style="padding: 0;">
                             <div class="scrollable-card" style="max-height: 400px; padding: 0 24px;">
-                                <div class="update-item">
-                                    <div class="update-icon" style="background: #fdf2f2; color: #d63031;">
-                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                <?php
+                                $timeFormatter = function($dateStr) {
+                                    $timestamp = strtotime($dateStr);
+                                    $diff = time() - $timestamp;
+                                    if ($diff < 60) {
+                                        return 'Just now';
+                                    } elseif ($diff < 3600) {
+                                        $mins = max(1, round($diff / 60));
+                                        return $mins . ($mins == 1 ? ' minute' : ' minutes') . ' ago';
+                                    } elseif ($diff < 86400) {
+                                        $hours = max(1, round($diff / 3600));
+                                        return $hours . ($hours == 1 ? ' hour' : ' hours') . ' ago';
+                                    } elseif ($diff < 172800) {
+                                        return 'Yesterday';
+                                    } else {
+                                        return date('M j, Y', $timestamp);
+                                    }
+                                };
+                                ?>
+
+                                <?php if (empty($enrollmentUpdates)): ?>
+                                    <div style="padding: 32px 16px; text-align: center; color: var(--text-medium); font-size: 0.9rem;">
+                                        <i class="fa-solid fa-bullhorn" style="font-size: 2rem; color: var(--border-color); margin-bottom: 12px; display: block;"></i>
+                                        No announcements at this time.
                                     </div>
-                                    <div class="update-content">
-                                        <h4>CSIT122 F1</h4>
-                                        <p>Section F1 is now at full capacity (40/40 students)</p>
-                                        <span class="update-time">2 hours ago</span>
-                                    </div>
-                                </div>
-                                <div class="update-item">
-                                    <div class="update-icon" style="background: #e8f8f5; color: #16a085;">
-                                        <i class="fa-solid fa-circle-check"></i>
-                                    </div>
-                                    <div class="update-content">
-                                        <h4>CSIT228 F3</h4>
-                                        <p>New section F3 opened - TTH 3:00-4:30 PM</p>
-                                        <span class="update-time">5 hours ago</span>
-                                    </div>
-                                </div>
-                                <div class="update-item">
-                                    <div class="update-icon" style="background: #fff9e6; color: #d35400;">
-                                        <i class="fa-solid fa-triangle-exclamation"></i>
-                                    </div>
-                                    <div class="update-content">
-                                        <h4>MATH215 F2</h4>
-                                        <p>Room changed from 108 to 110</p>
-                                        <span class="update-time">1 day ago</span>
-                                    </div>
-                                </div>
-                                <div class="update-item">
-                                    <div class="update-icon" style="background: #eef2ff; color: #4f46e5;">
-                                        <i class="fa-solid fa-info-circle"></i>
-                                    </div>
-                                    <div class="update-content">
-                                        <h4>Department Notice</h4>
-                                        <p>Pre-enrollment deadline extended to May 15</p>
-                                        <span class="update-time">2 days ago</span>
-                                    </div>
-                                </div>
+                                <?php else: ?>
+                                    <?php foreach ($enrollmentUpdates as $upd): ?>
+                                        <?php
+                                            $status = $upd['status'];
+                                            $iconClass = 'fa-solid fa-info-circle';
+                                            $styleStr = 'background: #eef2ff; color: #4f46e5;';
+                                            if ($status === 'Critical') {
+                                                $iconClass = 'fa-solid fa-circle-exclamation';
+                                                $styleStr = 'background: #fdf2f2; color: #d63031;';
+                                            } elseif ($status === 'New') {
+                                                $iconClass = 'fa-solid fa-circle-check';
+                                                $styleStr = 'background: #e8f8f5; color: #16a085;';
+                                            } elseif ($status === 'Advisory') {
+                                                $iconClass = 'fa-solid fa-triangle-exclamation';
+                                                $styleStr = 'background: #fff9e6; color: #d35400;';
+                                            }
+                                        ?>
+                                        <div class="update-item">
+                                            <div class="update-icon" style="<?= $styleStr ?>">
+                                                <i class="<?= $iconClass ?>"></i>
+                                            </div>
+                                            <div class="update-content">
+                                                <h4><?= htmlspecialchars($upd['title']) ?></h4>
+                                                <p><?= htmlspecialchars($upd['description']) ?></p>
+                                                <span class="update-time"><?= $timeFormatter($upd['created_at']) ?></span>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

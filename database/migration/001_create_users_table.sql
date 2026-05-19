@@ -1,3 +1,15 @@
+-- Drop existing tables in reverse dependency order
+DROP TABLE IF EXISTS enrollmentUpdates;
+DROP TABLE IF EXISTS WaitlistSimulation;
+DROP TABLE IF EXISTS PlannedItem;
+DROP TABLE IF EXISTS Schedule;
+DROP TABLE IF EXISTS Section;
+DROP TABLE IF EXISTS Course;
+DROP TABLE IF EXISTS Notification;
+DROP TABLE IF EXISTS Student;
+DROP TABLE IF EXISTS Admin;
+DROP TABLE IF EXISTS User;
+
 -- 1. Base User Table
 CREATE TABLE IF NOT EXISTS User (
     userID INT PRIMARY KEY AUTO_INCREMENT,
@@ -32,8 +44,6 @@ CREATE TABLE IF NOT EXISTS Student (
     studentNumber VARCHAR(20) UNIQUE,
     program VARCHAR(50),
     yearLevel INT DEFAULT 1,
-    points INT DEFAULT 0,
-    major VARCHAR(100),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (userID) REFERENCES User(userID) ON DELETE CASCADE
@@ -72,7 +82,6 @@ CREATE TABLE IF NOT EXISTS Section (
     timeslot VARCHAR(100),
     room VARCHAR(50),
     capacity INT DEFAULT 50,
-    enrolledCount INT DEFAULT 0,
     instructor VARCHAR(100),
     semester VARCHAR(20),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -87,7 +96,6 @@ CREATE TABLE IF NOT EXISTS Schedule (
     semester VARCHAR(20) NOT NULL,
     academicYear INT,
     status VARCHAR(20) DEFAULT 'draft',
-    notes TEXT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (studentID) REFERENCES Student(studentID) ON DELETE CASCADE
@@ -98,28 +106,18 @@ CREATE TABLE IF NOT EXISTS PlannedItem (
     plannedItemID INT PRIMARY KEY AUTO_INCREMENT,
     scheduleID INT NOT NULL,
     sectionID INT NOT NULL,
-    commitmentLevel INT DEFAULT 5,
+    backupSectionID INT NULL,
     priority INT DEFAULT 1,
     enrollmentStatus VARCHAR(20) DEFAULT 'planned',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (scheduleID) REFERENCES Schedule(scheduleID) ON DELETE CASCADE,
     FOREIGN KEY (sectionID) REFERENCES Section(sectionID) ON DELETE CASCADE,
+    FOREIGN KEY (backupSectionID) REFERENCES Section(sectionID) ON DELETE SET NULL,
     UNIQUE KEY unique_schedule_section (scheduleID, sectionID)
 );
 
--- 9. WaitlistSimulation (Linked to Section)
-CREATE TABLE IF NOT EXISTS WaitlistSimulation (
-    waitlistSimulationID INT PRIMARY KEY AUTO_INCREMENT,
-    sectionID INT NOT NULL,
-    studentID INT NOT NULL,
-    priorityScore INT,
-    position INT,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (sectionID) REFERENCES Section(sectionID) ON DELETE CASCADE,
-    FOREIGN KEY (studentID) REFERENCES Student(studentID) ON DELETE CASCADE
-);
+-- 9. WaitlistSimulation (Abolished)
 
 CREATE TABLE IF NOT EXISTS enrollmentUpdates (
     id INT AUTO_INCREMENT PRIMARY KEY,

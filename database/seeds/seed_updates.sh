@@ -16,12 +16,19 @@ sql_quote() {
 }
 
 echo "Seeding updates..."
+mysql_exec "TRUNCATE TABLE enrollmentUpdates;"
 
 declare -a updates=(
-  "CSIT122 F1 - Section Full|Section F1 (Intermediate Programming II) is now at full capacity (40/40 students). Students are advised to consider Section F2 or F3.|Critical"
-  "CSIT122 F2 - New Section Opened|Due to high demand, a new section F4 for CSIT122 has been opened. Enrollment starts tomorrow at 9 AM.|New"
-  "MATH215 F2 - Room Change|The room for Discrete Mathematics Section F2 has been changed from Room 108 to Room 110. Please update your plotted schedule.|Advisory"
-  "CSIT228 F3 - New Section Opened|A new block (Section F3) for Database Management Systems has been opened to accommodate high demand. Schedule: TTH 3:00-4:30 PM.|New"
+  "CSIT221 F1 - Section Full|Section F1 (Data Structures and Algorithms) is now at full capacity (40/40 students). Students are advised to consider Section F2 or F3.|Critical"
+  "CSIT227 F2 - Section Full|Section F2 (Object-oriented Programming 1) is now at full capacity (40/40 students). Students are advised to consider Section F1 or F3.|Critical"
+  "CS231 F2 - Room Change|The room for Discrete Structures 2 Section F2 has been changed from Room 201 to Room 205. Please update your plotted schedule.|Advisory"
+  "PE205 F3 - Section Schedule Update|A schedule update for PATHFit 3 has occurred. Section F3 schedule is now TTh 14:30-15:30.|New"
+  "CS243 F1 - Section Full|Section F1 (Computer Architecture and Organization) is now at full capacity. Please check other sections.|Critical"
+  "CSIT104 F2 - Instructor Update|Section F2 for Introduction to Computing has a new instructor: Dr. Alan Turing.|New"
+  "CSIT213 F3 - Time Slot Adjustment|Section F3 for Applications Development and Emerging Technologies has been moved to MWF 16:00-17:00.|Advisory"
+  "SDG031 F1 - Section Added|A new section F2 has been created for Social Development Goals to accommodate extra students.|New"
+  "Enrollment Deadline Extended|CIT pre-enrollment deadline has been extended to Friday, June 5th to allow all students to finalize their backup plans.|Advisory"
+  "CSIT227 F1 - Room Change|Section F1 of Object-oriented Programming 1 has been moved to Lab 402 for state-of-the-art workstation support.|New"
 )
 
 for line in "${updates[@]}"; do

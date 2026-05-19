@@ -19,11 +19,11 @@ echo "Seeding schedules and planned items..."
 
 # Create schedules for each student
 declare -a schedules=(
-  "STU001|1st Semester|2026|draft|Initial enrollment plan"
-  "STU002|1st Semester|2026|draft|Initial enrollment plan"
-  "STU003|1st Semester|2026|draft|Initial enrollment plan"
-  "STU004|1st Semester|2026|draft|Initial enrollment plan"
-  "STU005|1st Semester|2026|draft|Initial enrollment plan"
+  "26-0000-000|1st Semester|2026|draft|Initial enrollment plan"
+  "26-0000-001|1st Semester|2026|draft|Initial enrollment plan"
+  "26-0000-002|1st Semester|2026|draft|Initial enrollment plan"
+  "26-0000-003|1st Semester|2026|draft|Initial enrollment plan"
+  "26-0000-004|1st Semester|2026|draft|Initial enrollment plan"
 )
 
 for line in "${schedules[@]}"; do
@@ -42,8 +42,8 @@ for line in "${schedules[@]}"; do
   # Create schedule using transaction
   query="
     START TRANSACTION;
-    INSERT INTO Schedule (studentID, semester, academicYear, status, notes) 
-    VALUES ($studentID, '$semesterEscaped', $academicYear, '$status', '$notesEscaped');
+    INSERT INTO Schedule (studentID, semester, academicYear, status) 
+    VALUES ($studentID, '$semesterEscaped', $academicYear, '$status');
     COMMIT;
   "
   
@@ -56,25 +56,29 @@ done
 
 # Add planned items (course registrations)
 declare -a planned_items=(
-  "STU001|CS101-A-S1|8|1|planned"
-  "STU001|CS201-A-S1|9|2|planned"
-  "STU001|CS401-A-S1|7|3|planned"
-  "STU002|CS101-B-S1|9|1|planned"
-  "STU002|CS201-B-S1|8|2|planned"
-  "STU002|IT101-A-S1|6|3|planned"
-  "STU003|CS101-A-S1|7|1|planned"
-  "STU003|IT201-A-S1|8|2|planned"
-  "STU003|IT301-A-S1|5|3|planned"
-  "STU004|CS101-B-S1|9|1|planned"
-  "STU004|IT201-A-S1|7|2|planned"
-  "STU004|IT401-A-S1|8|3|planned"
-  "STU005|CS201-A-S1|6|1|planned"
-  "STU005|CS401-A-S1|9|2|planned"
-  "STU005|IT301-A-S1|7|3|planned"
+  "26-0000-000|CS231-F1|1|planned"
+  "26-0000-000|CS243-F1|2|planned"
+  "26-0000-000|CSIT104-F1|3|planned"
+
+  "26-0000-001|CS231-F2|1|planned"
+  "26-0000-001|CS243-F2|2|planned"
+  "26-0000-001|CSIT213-F2|3|planned"
+
+  "26-0000-002|CSIT221-F1|1|planned"
+  "26-0000-002|CSIT227-F1|2|planned"
+  "26-0000-002|SDG031-F1|3|planned"
+
+  "26-0000-003|CS231-F3|1|planned"
+  "26-0000-003|CSIT221-F3|2|planned"
+  "26-0000-003|PE205-F3|3|planned"
+
+  "26-0000-004|CSIT227-F1|1|planned"
+  "26-0000-004|SDG031-F1|2|planned"
+  "26-0000-004|PE205-F1|3|planned"
 )
 
 for line in "${planned_items[@]}"; do
-  IFS='|' read -r studentNumber sectionCode commitmentLevel priority enrollmentStatus <<< "$line"
+  IFS='|' read -r studentNumber sectionCode priority enrollmentStatus <<< "$line"
   studentNumberEscaped=$(sql_quote "$studentNumber")
   sectionCodeEscaped=$(sql_quote "$sectionCode")
   enrollmentStatusEscaped=$(sql_quote "$enrollmentStatus")
@@ -98,8 +102,8 @@ for line in "${planned_items[@]}"; do
     exit 1
   fi
 
-  mysql_exec "INSERT INTO PlannedItem (scheduleID, sectionID, commitmentLevel, priority, enrollmentStatus) 
-  VALUES ($scheduleID, $sectionID, $commitmentLevel, $priority, '$enrollmentStatusEscaped');" > /dev/null || {
+  mysql_exec "INSERT INTO PlannedItem (scheduleID, sectionID, priority, enrollmentStatus) 
+  VALUES ($scheduleID, $sectionID, $priority, '$enrollmentStatusEscaped');" > /dev/null || {
     echo "  ERROR: Failed to add planned item for $studentNumber / $sectionCode"
     exit 1
   }

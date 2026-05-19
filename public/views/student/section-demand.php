@@ -51,14 +51,17 @@
                 </div>
             </div>
 
-            <div class="card">
+            <div class="card" style="margin-bottom: 32px;">
                 <div class="card-header">
                     <h3>Section Comparison by Course</h3>
                 </div>
-                <div class="card-body">
-                    <div class="scrollable-card" style="max-height: 600px;" id="course-accordion-container">
+                <div class="card-body" style="padding-bottom: 24px;">
+                    <div id="course-accordion-container">
                         <!-- Loaded by JavaScript -->
                     </div>
+                </div>
+                <div class="demand-pagination" id="demand-pagination-controls">
+                    <!-- Dynamic Pagination Footer -->
                 </div>
             </div>
         </div>
@@ -66,6 +69,8 @@
 
     <script>
         let demandData = { courses: [], sections: [] };
+        let demandCurrentPage = 1;
+        const demandPageSize = 3; // 3 courses per page
 
         function getDemandBadgeClass(fillPercent) {
             if (fillPercent >= 80) return 'badge-high';
@@ -116,15 +121,22 @@
                 courseMap[courseCode].sections.push(section);
             });
 
+            const coursesList = Object.values(courseMap);
+            const totalCourses = coursesList.length;
+            const totalPages = Math.ceil(totalCourses / demandPageSize);
+
+            if (demandCurrentPage > totalPages) demandCurrentPage = totalPages;
+            if (demandCurrentPage < 1) demandCurrentPage = 1;
+
+            const startIndex = (demandCurrentPage - 1) * demandPageSize;
+            const endIndex = startIndex + demandPageSize;
+            const paginatedCourses = coursesList.slice(startIndex, endIndex);
+
             // Render each course accordion
-            Object.values(courseMap).forEach((course, index) => {
+            paginatedCourses.forEach((course, index) => {
                 const accordion = document.createElement('div');
                 accordion.className = 'course-accordion';
                 if (index === 0) accordion.classList.add('active');
-
-                const fillPercent = course.sections.length > 0 
-                    ? (course.sections.reduce((sum, s) => sum + (s.enrolledCount / s.capacity * 100), 0) / course.sections.length)
-                    : 0;
 
                 accordion.innerHTML = `
                     <div class="accordion-header" onclick="this.parentElement.classList.toggle('active')">
@@ -169,7 +181,7 @@
                             </div>
                         </div>
                         <div class="progress-container">
-                            <div class="progress-label"><span>Enrolled</span><span>${section.enrolledCount} / ${section.capacity}</span></div>
+                            <div class="progress-label"><span>Interested</span><span>${section.enrolledCount} / ${section.capacity}</span></div>
                             <div class="progress-bar-wrapper">
                                 <div class="progress-bar ${progressColor}" style="width: ${enrollPercent}%;"></div>
                             </div>
@@ -183,6 +195,65 @@
             document.querySelectorAll('.accordion-header').forEach(header => {
                 header.style.cursor = 'pointer';
             });
+
+            renderDemandPagination(totalPages);
+        }
+
+        function renderDemandPagination(totalPages) {
+            const paginationControls = document.getElementById('demand-pagination-controls');
+            paginationControls.innerHTML = '';
+
+            if (totalPages <= 1) {
+                paginationControls.style.display = 'none';
+                return;
+            }
+
+            paginationControls.style.display = 'flex';
+
+            const info = document.createElement('span');
+            info.className = 'pagination-info';
+            info.textContent = `Page ${demandCurrentPage} of ${totalPages}`;
+            paginationControls.appendChild(info);
+
+            const pagesWrapper = document.createElement('div');
+            pagesWrapper.className = 'pagination-pages';
+
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'btn-page';
+            prevBtn.disabled = demandCurrentPage === 1;
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prevBtn.onclick = () => {
+                if (demandCurrentPage > 1) {
+                    demandCurrentPage--;
+                    renderSectionDemand();
+                }
+            };
+            pagesWrapper.appendChild(prevBtn);
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = `btn-page ${demandCurrentPage === i ? 'active' : ''}`;
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    demandCurrentPage = i;
+                    renderSectionDemand();
+                };
+                pagesWrapper.appendChild(pageBtn);
+            }
+
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn-page';
+            nextBtn.disabled = demandCurrentPage === totalPages;
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            nextBtn.onclick = () => {
+                if (demandCurrentPage < totalPages) {
+                    demandCurrentPage++;
+                    renderSectionDemand();
+                }
+            };
+            pagesWrapper.appendChild(nextBtn);
+
+            paginationControls.appendChild(pagesWrapper);
         }
 
         function updateStats() {
@@ -209,6 +280,58 @@
         .course-accordion.active .accordion-content { display: block; }
         .course-accordion.active .accordion-header i { transform: rotate(180deg); }
         .accordion-header i { transition: transform 0.3s; }
+
+        /* Pagination Styles */
+        .demand-pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 20px;
+            border-top: 1px solid var(--border-color, #dddddd);
+            background: #fafafa;
+        }
+        .pagination-info {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-medium);
+        }
+        .pagination-pages {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-page {
+            background: #fff;
+            border: 1px solid var(--border-color, #dddddd);
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 34px;
+            height: 34px;
+        }
+        .btn-page:hover:not(:disabled) {
+            border-color: var(--primary-maroon);
+            color: var(--primary-maroon);
+            background: rgba(128, 0, 0, 0.02);
+        }
+        .btn-page.active {
+            background: var(--primary-maroon);
+            border-color: var(--primary-maroon);
+            color: white !important;
+        }
+        .btn-page:disabled {
+            color: var(--text-light);
+            cursor: not-allowed;
+            background: #f5f5f5;
+        }
     </style>
 </body>
 </html>

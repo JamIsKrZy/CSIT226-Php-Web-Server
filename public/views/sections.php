@@ -415,8 +415,8 @@
                         </div>
 
                         <div class="form-group">
-                            <label for="enrolledCount">Currently Enrolled</label>
-                            <input type="number" id="enrolledCount" value="0" min="0">
+                            <label for="interestedCount">Interested Students</label>
+                            <input type="number" id="interestedCount" value="0" readonly disabled style="background: var(--bg-card); cursor: not-allowed;">
                         </div>
                     </div>
 
@@ -592,7 +592,7 @@
                     document.getElementById('courseSelect').value = section.courseID;
                     document.getElementById('sectionCode').value = section.sectionCode;
                     document.getElementById('capacity').value = section.capacity;
-                    document.getElementById('enrolledCount').value = section.enrolledCount;
+                    document.getElementById('interestedCount').value = section.enrolledCount;
                     document.getElementById('instructor').value = section.instructor || '';
                     document.getElementById('timeslot').value = section.timeslot || '';
                     document.getElementById('room').value = section.room || '';
@@ -618,7 +618,7 @@
                 courseID: document.getElementById('courseSelect').value,
                 sectionCode: document.getElementById('sectionCode').value,
                 capacity: document.getElementById('capacity').value,
-                enrolledCount: document.getElementById('enrolledCount').value,
+                interestedCount: document.getElementById('interestedCount').value,
                 instructor: document.getElementById('instructor').value,
                 timeslot: document.getElementById('timeslot').value,
                 room: document.getElementById('room').value,

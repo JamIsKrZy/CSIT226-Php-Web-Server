@@ -14,7 +14,9 @@ class EnrollmentPlanRepository {
         return $this->db->query('
             SELECT pi.plannedItemID, pi.sectionID, c.courseID, c.courseCode, c.courseName, c.credits,
                    s.sectionCode, s.timeslot, s.room, s.capacity,
-                   pi.enrollmentStatus, pi.priority, pi.commitmentLevel
+                   (SELECT COUNT(*) FROM PlannedItem p WHERE p.sectionID = s.sectionID) AS interestedCount,
+                   (SELECT COUNT(*) FROM PlannedItem p WHERE p.sectionID = s.sectionID AND p.createdAt < pi.createdAt) AS studentsBefore,
+                   pi.enrollmentStatus, pi.priority
             FROM PlannedItem pi
             JOIN Schedule sch ON pi.scheduleID = sch.scheduleID
             JOIN Section s ON pi.sectionID = s.sectionID
@@ -80,12 +82,11 @@ class EnrollmentPlanRepository {
     public function addPlannedItem(
         int $scheduleID,
         int $sectionID,
-        int $commitmentLevel = 5,
         int $priority = 1
     ): int {
         $this->db->execute(
-            'INSERT INTO PlannedItem (scheduleID, sectionID, commitmentLevel, priority) VALUES (?, ?, ?, ?)',
-            [$scheduleID, $sectionID, $commitmentLevel, $priority]
+            'INSERT INTO PlannedItem (scheduleID, sectionID, priority) VALUES (?, ?, ?)',
+            [$scheduleID, $sectionID, $priority]
         );
 
         return (int) $this->db->lastInsertId();
