@@ -564,12 +564,29 @@ class ApiController {
         
         $data = json_decode(file_get_contents('php://input'), true);
 
-        if (!$data || !isset($data['firstName'], $data['lastName'], $data['email'], $data['password'], $data['adminCode'])) {
+        if (!$data || !isset($data['firstName'], $data['lastName'], $data['email'], $data['password'])) {
             echo $this->response(false, 'Missing required fields', null, 400);
             return;
         }
 
         try {
+            // Check duplicate email
+            $existingUser = $this->db->queryOne('SELECT userID FROM User WHERE email = ?', [$data['email']]);
+            if ($existingUser) {
+                echo $this->response(false, 'Email already registered', null, 400);
+                return;
+            }
+
+            // Generate adminCode in 26-#### format
+            $lastAdmin = $this->db->queryOne("SELECT adminCode FROM Admin WHERE adminCode LIKE '26-%' ORDER BY adminCode DESC LIMIT 1");
+            if ($lastAdmin && isset($lastAdmin['adminCode'])) {
+                $lastNumStr = substr($lastAdmin['adminCode'], 3);
+                $nextNum = ((int)$lastNumStr) + 1;
+            } else {
+                $nextNum = 1;
+            }
+            $adminCode = '26-' . sprintf('%04d', $nextNum);
+
             $hashed = password_hash($data['password'], PASSWORD_BCRYPT);
             $this->db->execute(
                 'INSERT INTO User (firstName, lastName, email, password, academicYear, userType, status) 
@@ -580,10 +597,10 @@ class ApiController {
 
             $this->db->execute(
                 'INSERT INTO Admin (userID, adminCode, role, department, designation) VALUES (?, ?, ?, ?, ?)',
-                [$userID, $data['adminCode'], $data['role'] ?? null, $data['department'] ?? null, $data['designation'] ?? null]
+                [$userID, $adminCode, $data['role'] ?? 'admin', $data['department'] ?? 'Computer Science', $data['designation'] ?? 'Academic Staff']
             );
 
-            echo $this->response(true, 'Admin created successfully', ['adminID' => $this->db->lastInsertId()], 201);
+            echo $this->response(true, 'Admin created successfully', ['adminID' => $this->db->lastInsertId(), 'adminCode' => $adminCode], 201);
         } catch (\Exception $e) {
             echo $this->response(false, 'Error creating admin: ' . $e->getMessage(), null, 500);
         }
@@ -1063,8 +1080,8 @@ class ApiController {
             }
 
             if ($section !== '') {
-                $whereParts[] = 's.sectionCode = ?';
-                $params[] = $section;
+                $whereParts[] = 's.sectionCode LIKE ?';
+                $params[] = "%-$section";
             }
 
             if ($demand !== '') {
@@ -1114,11 +1131,15 @@ class ApiController {
 
             $interests = $this->db->query($sql, $params);
 
-            // Fetch distinct sectionCodes for the filter dropdown
-            $distinctSectionsResult = $this->db->query("
-                SELECT DISTINCT sectionCode FROM Section ORDER BY sectionCode ASC
-            ");
-            $sectionsList = array_column($distinctSectionsResult, 'sectionCode');
+            // Extract F1/F2/F3 suffix for returning section names
+            foreach ($interests as &$item) {
+                if (isset($item['section'])) {
+                    $parts = explode('-', $item['section']);
+                    $item['section'] = end($parts);
+                }
+            }
+
+            $sectionsList = ['F1', 'F2', 'F3'];
 
             echo $this->response(true, 'Interest data retrieved', [
                 'list' => $interests,

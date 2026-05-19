@@ -44,6 +44,9 @@
                         <label>Section</label>
                         <select id="filter-section" class="btn btn-outline" style="width: 100%; text-align: left;">
                             <option value="">All Sections</option>
+                            <option value="F1">F1</option>
+                            <option value="F2">F2</option>
+                            <option value="F3">F3</option>
                         </select>
                     </div>
                     <div class="form-group" style="flex: 1; margin-bottom: 0;">

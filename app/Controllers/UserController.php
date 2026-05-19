@@ -394,12 +394,17 @@ class UserController {
 
         // If admin type, create the Admin specialization record
         if ($user_type === 'admin' && $newUser) {
-            $adminCode = trim($_POST['admin_code'] ?? '');
-            if (empty($adminCode)) {
-                $adminCode = 'ADM-' . date('Y') . '-' . str_pad($newUser['userID'], 3, '0', STR_PAD_LEFT);
+            // Generate adminCode in 26-#### format
+            $lastAdmin = $this->db->queryOne("SELECT adminCode FROM Admin WHERE adminCode LIKE '26-%' ORDER BY adminCode DESC LIMIT 1");
+            if ($lastAdmin && isset($lastAdmin['adminCode'])) {
+                $lastNumStr = substr($lastAdmin['adminCode'], 3);
+                $nextNum = ((int)$lastNumStr) + 1;
+            } else {
+                $nextNum = 1;
             }
+            $adminCode = '26-' . sprintf('%04d', $nextNum);
             $department = $_POST['department'] ?? 'Enrollment Services';
-            $designation = $_POST['designation'] ?? 'Staff';
+            $designation = $_POST['designation'] ?? 'Academic Staff';
 
             $this->db->execute(
                 'INSERT INTO Admin (userID, adminCode, role, department, designation) VALUES (?, ?, ?, ?, ?)',

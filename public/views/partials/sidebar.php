@@ -3,7 +3,7 @@
         <img src="/assets/images/logo.png" alt="CIT University Logo">
         <div class="logo-text">
             <h1>CIT University</h1>
-            <p>Enrollment System</p>
+            <p>Pre-Enrollment System</p>
         </div>
     </div>
     <nav class="sidebar-menu">
