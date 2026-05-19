@@ -42,9 +42,19 @@ class AdminController {
         );
         $userID = $this->db->lastInsertId();
 
+        // Generate adminCode in 26-#### format
+        $lastAdmin = $this->db->queryOne("SELECT adminCode FROM Admin WHERE adminCode LIKE '26-%' ORDER BY adminCode DESC LIMIT 1");
+        if ($lastAdmin && isset($lastAdmin['adminCode'])) {
+            $lastNumStr = substr($lastAdmin['adminCode'], 3);
+            $nextNum = ((int)$lastNumStr) + 1;
+        } else {
+            $nextNum = 1;
+        }
+        $adminCode = '26-' . sprintf('%04d', $nextNum);
+
         $this->db->execute(
-            'INSERT INTO Admin (userID, adminCode, role) VALUES (?, ?, ?)',
-            [$userID, $data['admin_id'], 'admin']
+            'INSERT INTO Admin (userID, adminCode, role, department, designation) VALUES (?, ?, ?, ?, ?)',
+            [$userID, $adminCode, 'admin', $data['department'] ?? 'Computer Science', $data['designation'] ?? 'Academic Staff']
         );
 
         header('Location: /admin/management?success=1');

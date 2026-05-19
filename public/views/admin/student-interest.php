@@ -37,28 +37,28 @@
                         <label>Search Subject / Section</label>
                         <div class="search-bar" style="width: 100%; background: #f8f9fa; border: 1px solid var(--border-color);">
                             <i class="fa-solid fa-magnifying-glass"></i>
-                            <input type="text" placeholder="e.g. CSIT122 or F1">
+                            <input type="text" id="search-input" placeholder="e.g. CSIT122 or F1">
                         </div>
                     </div>
                     <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                        <label>Program</label>
-                        <select class="btn btn-outline" style="width: 100%; text-align: left;">
-                            <option value="">All Programs</option>
-                            <option value="BSCS">BS Computer Science</option>
-                            <option value="BSIT">BS Information Technology</option>
+                        <label>Section</label>
+                        <select id="filter-section" class="btn btn-outline" style="width: 100%; text-align: left;">
+                            <option value="">All Sections</option>
+                            <option value="F1">F1</option>
+                            <option value="F2">F2</option>
+                            <option value="F3">F3</option>
                         </select>
                     </div>
                     <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                        <label>Year Level</label>
-                        <select class="btn btn-outline" style="width: 100%; text-align: left;">
-                            <option value="">All Years</option>
-                            <option value="1">1st Year</option>
-                            <option value="2">2nd Year</option>
-                            <option value="3">3rd Year</option>
-                            <option value="4">4th Year</option>
+                        <label>Demand Label</label>
+                        <select id="filter-demand" class="btn btn-outline" style="width: 100%; text-align: left;">
+                            <option value="">All Demands</option>
+                            <option value="High">High</option>
+                            <option value="Moderate">Moderate</option>
+                            <option value="Low">Low</option>
                         </select>
                     </div>
-                    <button class="btn btn-primary" style="height: 42px; padding: 0 24px;">Apply Filters</button>
+                    <button class="btn btn-primary" id="apply-filters-btn" style="height: 42px; padding: 0 24px;">Apply Filters</button>
                 </div>
             </div>
 
@@ -81,6 +81,12 @@
                         </table>
                     </div>
                 </div>
+                <div class="card-footer" style="padding: 16px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                    <span id="pagination-info" style="font-size: 0.85rem; color: var(--text-medium);">Showing 0 to 0 of 0 entries</span>
+                    <div id="pagination-controls" style="display: flex; gap: 8px;">
+                        <!-- Rendered by JavaScript -->
+                    </div>
+                </div>
             </div>
 
             <div style="margin-top: 24px; padding: 16px; background: #fffbeb; border: 1px solid #fef3c7; border-radius: var(--radius-md); display: flex; gap: 12px; align-items: center;">
@@ -94,17 +100,49 @@
 
     <script>
         let interestData = [];
+        let currentPage = 1;
+        let limit = 10;
+        let totalPages = 1;
+        let totalRecords = 0;
+        let sectionsPopulated = false;
 
         function loadInterestData() {
-            fetch('/api/student/interest-data')
+            const search = document.getElementById('search-input').value;
+            const section = document.getElementById('filter-section').value;
+            const demand = document.getElementById('filter-demand').value;
+
+            const url = `/api/student/interest-data?search=${encodeURIComponent(search)}&section=${encodeURIComponent(section)}&demand=${encodeURIComponent(demand)}&page=${currentPage}&limit=${limit}`;
+
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        interestData = data.data || [];
+                        interestData = data.data.list || [];
+                        currentPage = parseInt(data.data.page) || 1;
+                        totalPages = parseInt(data.data.totalPages) || 1;
+                        totalRecords = parseInt(data.data.total) || 0;
+
+                        if (!sectionsPopulated && data.data.sectionsList) {
+                            populateSectionsDropdown(data.data.sectionsList);
+                            sectionsPopulated = true;
+                        }
+
                         renderInterestTable();
+                        renderPagination();
                     }
                 })
                 .catch(error => console.error('Error loading interest data:', error));
+        }
+
+        function populateSectionsDropdown(sections) {
+            const select = document.getElementById('filter-section');
+            select.innerHTML = '<option value="">All Sections</option>';
+            sections.forEach(sec => {
+                const opt = document.createElement('option');
+                opt.value = sec;
+                opt.textContent = sec;
+                select.appendChild(opt);
+            });
         }
 
         function renderInterestTable() {
@@ -133,6 +171,84 @@
                 tbody.appendChild(tr);
             });
         }
+
+        function renderPagination() {
+            const info = document.getElementById('pagination-info');
+            const controls = document.getElementById('pagination-controls');
+
+            const start = totalRecords === 0 ? 0 : (currentPage - 1) * limit + 1;
+            const end = Math.min(currentPage * limit, totalRecords);
+            info.textContent = `Showing ${start} to ${end} of ${totalRecords} entries`;
+
+            controls.innerHTML = '';
+
+            // Previous Button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'btn btn-outline';
+            prevBtn.style.padding = '6px 12px';
+            prevBtn.style.fontSize = '0.8rem';
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadInterestData();
+                }
+            };
+            controls.appendChild(prevBtn);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages > 5 && Math.abs(currentPage - i) > 2 && i !== 1 && i !== totalPages) {
+                    if (i === 2 || i === totalPages - 1) {
+                        const dots = document.createElement('span');
+                        dots.textContent = '...';
+                        dots.style.alignSelf = 'center';
+                        dots.style.color = 'var(--text-medium)';
+                        controls.appendChild(dots);
+                    }
+                    continue;
+                }
+
+                const pageBtn = document.createElement('button');
+                pageBtn.className = i === currentPage ? 'btn btn-primary' : 'btn btn-outline';
+                pageBtn.style.padding = '6px 12px';
+                pageBtn.style.fontSize = '0.8rem';
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    loadInterestData();
+                };
+                controls.appendChild(pageBtn);
+            }
+
+            // Next Button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn btn-outline';
+            nextBtn.style.padding = '6px 12px';
+            nextBtn.style.fontSize = '0.8rem';
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadInterestData();
+                }
+            };
+            controls.appendChild(nextBtn);
+        }
+
+        document.getElementById('apply-filters-btn').addEventListener('click', () => {
+            currentPage = 1;
+            loadInterestData();
+        });
+
+        document.getElementById('search-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                currentPage = 1;
+                loadInterestData();
+            }
+        });
 
         // Load interest data on page load
         document.addEventListener('DOMContentLoaded', loadInterestData);

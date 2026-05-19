@@ -301,35 +301,26 @@
                 <div id="admin-section" class="dynamic-section <?php echo $selectedRole !== 'admin' ? 'hidden' : ''; ?>">
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="admin_code">Admin Code / Employee ID:</label>
-                            <input 
-                                type="text" 
-                                id="admin_code" 
-                                name="admin_code" 
-                                placeholder="e.g., ADM-2026-88"
-                            >
-                        </div>
-
-                        <div class="form-group">
                             <label for="department">Department:</label>
                             <select id="department" name="department" style="width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; background: white;">
                                 <option value="Enrollment Services" selected>Enrollment Services</option>
                                 <option value="Academic Affairs">Academic Affairs</option>
-                                <option value="College of Computer Studies">College of Computer Studies</option>
+                                <option value="Computer Science">Computer Science</option>
                                 <option value="Registrar Office">Registrar's Office</option>
                                 <option value="Information Technology">Information Technology</option>
                             </select>
                         </div>
-                    </div>
 
-                    <div class="form-group">
-                        <label for="designation">Designation / Role:</label>
-                        <input 
-                            type="text" 
-                            id="designation" 
-                            name="designation" 
-                            placeholder="e.g., Registrar Director, CCS Coordinator"
-                        >
+                        <div class="form-group">
+                            <label for="designation">Designation / Role:</label>
+                            <select id="designation" name="designation" style="width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 1rem; background: white;">
+                                <option value="Registrar Director" selected>Registrar Director</option>
+                                <option value="Program Chair">Program Chair</option>
+                                <option value="CCS Coordinator">CCS Coordinator</option>
+                                <option value="Department Admin">Department Admin</option>
+                                <option value="Academic Staff">Academic Staff</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -368,15 +359,11 @@
                 studentSec.classList.remove('hidden');
                 adminSec.classList.add('hidden');
                 
-                // Toggle required fields
-                document.getElementById('admin_code').required = false;
                 document.getElementById('email').placeholder = 'e.g., student.name@cit.edu';
             } else {
                 studentSec.classList.add('hidden');
                 adminSec.classList.remove('hidden');
                 
-                // Toggle required fields
-                document.getElementById('admin_code').required = true;
                 document.getElementById('email').placeholder = 'e.g., admin.name@cit.edu';
             }
         }
