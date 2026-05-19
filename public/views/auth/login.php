@@ -15,14 +15,14 @@
         <img src="/assets/images/logo.png" alt="CIT University Logo">
         <div class="header-text">
             <h1>CIT University</h1>
-            <p>Enrollment System</p>
+            <p>Pre-Enrollment System</p>
         </div>
     </header>
 
     <main class="login-card">
         <section class="left-panel">
             <div class="left-content">
-                <h2>WITS</h2>
+                <h2>WildPlanner</h2>
                 <h3>Student Portal</h3>
 
                 <p class="register-text" style="font-size: 0.95rem; color: var(--text-dark); margin-bottom: 25px; line-height: 1.5;">
