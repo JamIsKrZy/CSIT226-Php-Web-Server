@@ -102,7 +102,7 @@
                     </div>
                     <div class="form-group">
                         <label>Admin Code</label>
-                        <input type="text" id="add_adminCode" placeholder="ADM-###" required>
+                        <input type="text" id="add_adminCode" value="System Generated (26-####)" disabled style="background-color: #f3f4f6; color: #9ca3af;">
                     </div>
                     <div class="form-group">
                         <label>Role</label>
@@ -119,11 +119,23 @@
                     </div>
                     <div class="form-group" style="grid-column: 1/-1;">
                         <label>Department</label>
-                        <input type="text" id="add_department" placeholder="e.g. Enrollment Services">
+                        <select id="add_department" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.95rem; background: white;">
+                            <option value="Enrollment Services" selected>Enrollment Services</option>
+                            <option value="Academic Affairs">Academic Affairs</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Registrar Office">Registrar's Office</option>
+                            <option value="Information Technology">Information Technology</option>
+                        </select>
                     </div>
                     <div class="form-group" style="grid-column: 1/-1;">
                         <label>Designation</label>
-                        <input type="text" id="add_designation" placeholder="e.g. Director">
+                        <select id="add_designation" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.95rem; background: white;">
+                            <option value="Registrar Director" selected>Registrar Director</option>
+                            <option value="Program Chair">Program Chair</option>
+                            <option value="CCS Coordinator">CCS Coordinator</option>
+                            <option value="Department Admin">Department Admin</option>
+                            <option value="Academic Staff">Academic Staff</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer" style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 12px;">
@@ -158,7 +170,7 @@
                     </div>
                     <div class="form-group">
                         <label>Admin Code</label>
-                        <input type="text" id="edit_adminCode" required>
+                        <input type="text" id="edit_adminCode" disabled style="background-color: #f3f4f6; color: #6b7280; cursor: not-allowed;">
                     </div>
                     <div class="form-group">
                         <label>Role</label>
@@ -178,11 +190,23 @@
                     </div>
                     <div class="form-group" style="grid-column: 1/-1;">
                         <label>Department</label>
-                        <input type="text" id="edit_department">
+                        <select id="edit_department" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.95rem; background: white;">
+                            <option value="Enrollment Services">Enrollment Services</option>
+                            <option value="Academic Affairs">Academic Affairs</option>
+                            <option value="Computer Science">Computer Science</option>
+                            <option value="Registrar Office">Registrar's Office</option>
+                            <option value="Information Technology">Information Technology</option>
+                        </select>
                     </div>
                     <div class="form-group" style="grid-column: 1/-1;">
                         <label>Designation</label>
-                        <input type="text" id="edit_designation">
+                        <select id="edit_designation" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.95rem; background: white;">
+                            <option value="Registrar Director">Registrar Director</option>
+                            <option value="Program Chair">Program Chair</option>
+                            <option value="CCS Coordinator">CCS Coordinator</option>
+                            <option value="Department Admin">Department Admin</option>
+                            <option value="Academic Staff">Academic Staff</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer" style="margin-top: 30px; display: flex; justify-content: flex-end; gap: 12px;">
@@ -392,14 +416,13 @@
                 firstName: document.getElementById('add_first_name').value,
                 lastName: document.getElementById('add_last_name').value,
                 email: document.getElementById('add_email').value,
-                adminCode: document.getElementById('add_adminCode').value,
                 role: document.getElementById('add_role').value,
                 password: document.getElementById('add_password').value,
                 department: document.getElementById('add_department').value,
                 designation: document.getElementById('add_designation').value
             };
 
-            if (!data.firstName || !data.lastName || !data.email || !data.adminCode || !data.password) {
+            if (!data.firstName || !data.lastName || !data.email || !data.password) {
                 alert('Please fill in all required fields');
                 return;
             }
@@ -419,10 +442,10 @@
                         document.getElementById('add_first_name').value = '';
                         document.getElementById('add_last_name').value = '';
                         document.getElementById('add_email').value = '';
-                        document.getElementById('add_adminCode').value = '';
+                        document.getElementById('add_adminCode').value = 'System Generated (26-####)';
                         document.getElementById('add_password').value = '';
-                        document.getElementById('add_department').value = '';
-                        document.getElementById('add_designation').value = '';
+                        document.getElementById('add_department').value = 'Enrollment Services';
+                        document.getElementById('add_designation').value = 'Registrar Director';
                     } else {
                         alert('Error: ' + data.message);
                     }
