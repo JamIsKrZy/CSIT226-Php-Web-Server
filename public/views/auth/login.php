@@ -85,7 +85,7 @@
                 </div>
             </form>
 
-            <p class="forgot-password">Forgot Password? <a href="#">Click here</a></p>
+            <p class="forgot-password">Forgot Password? <a href="/change-password">Click here</a></p>
 
             <div class="contact-info">
                 <p>For inquiries, email us at</p>

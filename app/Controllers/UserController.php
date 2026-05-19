@@ -219,12 +219,91 @@ class UserController {
      * Show change password page
      */
     public function changePassword() {
-        // Check if user is logged in
-        if (!isset($_SESSION['user'])) {
-            header('Location: /');
+        return require __DIR__ . '/../../public/views/auth/change-password.php';
+    }
+
+    /**
+     * Handle updating user password
+     */
+    public function handleChangePassword() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo "Method not allowed";
+            return;
+        }
+
+        $email = trim($_POST['email'] ?? '');
+        $student_id = trim($_POST['student_id'] ?? '');
+        $new_password = $_POST['new_password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+
+        if (empty($email) || empty($student_id) || empty($new_password) || empty($confirm_password)) {
+            $_SESSION['error'] = 'All fields are required';
+            header('Location: /change-password');
             exit;
         }
-        return require __DIR__ . '/../../public/views/auth/change-password.php';
+
+        if ($new_password !== $confirm_password) {
+            $_SESSION['error'] = 'Passwords do not match';
+            header('Location: /change-password');
+            exit;
+        }
+
+        if (strlen($new_password) < 8) {
+            $_SESSION['error'] = 'Password must be at least 8 characters long';
+            header('Location: /change-password');
+            exit;
+        }
+
+        try {
+            // Find user by email
+            $user = $this->db->queryOne("SELECT userID, email, userType FROM User WHERE email = ?", [$email]);
+            if (!$user) {
+                $_SESSION['error'] = 'User account not found';
+                header('Location: /change-password');
+                exit;
+            }
+
+            $userID = (int)$user['userID'];
+            $userType = $user['userType'];
+
+            // Verify identifier (studentNumber or adminCode)
+            if ($userType === 'admin') {
+                $admin = $this->db->queryOne("SELECT adminID FROM Admin WHERE userID = ? AND adminCode = ? LIMIT 1", [$userID, $student_id]);
+                if (!$admin) {
+                    $_SESSION['error'] = 'Invalid Admin Code for this email';
+                    header('Location: /change-password');
+                    exit;
+                }
+            } else {
+                $student = $this->db->queryOne("SELECT studentID FROM Student WHERE userID = ? AND studentNumber = ? LIMIT 1", [$userID, $student_id]);
+                if (!$student) {
+                    $_SESSION['error'] = 'Invalid Student ID for this email';
+                    header('Location: /change-password');
+                    exit;
+                }
+            }
+
+            // Update user password in database
+            $hashedPassword = password_hash($new_password, PASSWORD_BCRYPT);
+            $this->db->execute("UPDATE User SET password = ? WHERE userID = ?", [$hashedPassword, $userID]);
+
+            $_SESSION['success'] = 'Password updated successfully!';
+
+            if (isset($_SESSION['user'])) {
+                // User is already logged in, redirect to their dashboard
+                header('Location: /dashboard');
+                exit;
+            } else {
+                // Not logged in (forgot password flow), redirect to login page (/)
+                header('Location: /');
+                exit;
+            }
+        } catch (\Exception $e) {
+            $_SESSION['error'] = 'Error updating password. Please try again.';
+            header('Location: /change-password');
+            exit;
+        }
     }
 
     /**

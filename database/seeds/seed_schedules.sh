@@ -42,8 +42,8 @@ for line in "${schedules[@]}"; do
   # Create schedule using transaction
   query="
     START TRANSACTION;
-    INSERT INTO Schedule (studentID, semester, academicYear, status, notes) 
-    VALUES ($studentID, '$semesterEscaped', $academicYear, '$status', '$notesEscaped');
+    INSERT INTO Schedule (studentID, semester, academicYear, status) 
+    VALUES ($studentID, '$semesterEscaped', $academicYear, '$status');
     COMMIT;
   "
   

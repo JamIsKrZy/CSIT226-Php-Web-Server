@@ -55,8 +55,8 @@ try {
     ");
     
     $insertSchedule = $pdo->prepare("
-        INSERT INTO Schedule (studentID, semester, academicYear, status, notes) 
-        VALUES (?, '1st Semester', 2026, 'draft', 'Waitlist Simulation Seed Plan')
+        INSERT INTO Schedule (studentID, semester, academicYear, status) 
+        VALUES (?, '1st Semester', 2026, 'draft')
     ");
     
     $insertPlannedItem = $pdo->prepare("

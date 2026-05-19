@@ -416,7 +416,7 @@
 
                         <div class="form-group">
                             <label for="interestedCount">Interested Students</label>
-                            <input type="number" id="interestedCount" value="0" min="0">
+                            <input type="number" id="interestedCount" value="0" readonly disabled style="background: var(--bg-card); cursor: not-allowed;">
                         </div>
                     </div>
 

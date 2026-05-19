@@ -405,7 +405,7 @@ class ApiController {
             $params = [];
             $fields = [];
 
-            foreach (['sectionCode', 'timeslot', 'room', 'capacity', 'interestedCount', 'instructor', 'semester'] as $field) {
+            foreach (['sectionCode', 'timeslot', 'room', 'capacity', 'instructor', 'semester'] as $field) {
                 if (isset($data[$field])) {
                     $fields[] = "$field = ?";
                     $params[] = $data[$field];

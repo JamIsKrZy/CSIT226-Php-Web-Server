@@ -40,12 +40,17 @@ class LoginController {
         $user = $this->userController->login($email, $password);
         
         if ($user && ($user['role'] ?? 'student') === 'admin') {
+            $db = new Database();
+            $adminRec = $db->queryOne("SELECT adminCode FROM Admin WHERE userID = ? LIMIT 1", [$user['id']]);
+            $adminCode = $adminRec ? $adminRec['adminCode'] : null;
+
             $_SESSION['user'] = [
                 'id' => $user['id'],
                 'email' => $user['email'],
                 'first_name' => $user['first_name'],
                 'last_name' => $user['last_name'] ?? '',
-                'role' => 'admin'
+                'role' => 'admin',
+                'student_number' => $adminCode
             ];
             $_SESSION['success'] = 'Admin login successful!';
             header('Location: /dashboard');
@@ -86,6 +91,12 @@ class LoginController {
                 if ($studentRec) {
                     $studentId = (int) $studentRec['studentID'];
                     $studentNumber = $studentRec['studentNumber'];
+                }
+            } else if (($user['role'] ?? 'student') === 'admin') {
+                $db = new Database();
+                $adminRec = $db->queryOne("SELECT adminCode FROM Admin WHERE userID = ? LIMIT 1", [$user['id']]);
+                if ($adminRec) {
+                    $studentNumber = $adminRec['adminCode'];
                 }
             }
 
@@ -201,6 +212,9 @@ class LoginController {
 
     // Handle logout
     public function logout() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         session_destroy();
         header('Location: /');
         exit;

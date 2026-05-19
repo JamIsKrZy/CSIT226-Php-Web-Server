@@ -82,8 +82,8 @@ for line in "${sections[@]}"; do
   instructorEscaped=$(sql_quote "$instructor")
   semesterEscaped=$(sql_quote "$semester")
 
-  mysql_exec "INSERT INTO Section (courseID, sectionCode, timeslot, room, capacity, interestedCount, instructor, semester) 
-  VALUES ($courseID, '$sectionCodeEscaped', '$timeslotEscaped', '$roomEscaped', $capacity, $enrolledCount, '$instructorEscaped', '$semesterEscaped');" > /dev/null || {
+  mysql_exec "INSERT INTO Section (courseID, sectionCode, timeslot, room, capacity, instructor, semester) 
+  VALUES ($courseID, '$sectionCodeEscaped', '$timeslotEscaped', '$roomEscaped', $capacity, '$instructorEscaped', '$semesterEscaped');" > /dev/null || {
     echo "  ERROR: Failed to insert section $sectionCode"
     exit 1
   }
