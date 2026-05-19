@@ -210,7 +210,28 @@ class UserController {
             exit;
         }
 
-        $updates = $this->db->query('SELECT * FROM enrollmentUpdates ORDER BY created_at DESC');
+        $type = $_GET['type'] ?? '';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $limit = 5; // 5 announcements per page
+        $offset = ($page - 1) * $limit;
+
+        $sql = 'SELECT * FROM enrollmentUpdates';
+        $countSql = 'SELECT COUNT(*) as total FROM enrollmentUpdates';
+        $params = [];
+
+        if ($type !== '') {
+            $sql .= ' WHERE status = ?';
+            $countSql .= ' WHERE status = ?';
+            $params[] = $type;
+        }
+
+        $sql .= ' ORDER BY created_at DESC LIMIT ' . (int)$limit . ' OFFSET ' . (int)$offset;
+
+        $totalResult = $this->db->queryOne($countSql, $params);
+        $totalUpdates = (int)($totalResult['total'] ?? 0);
+        $totalPages = max(1, ceil($totalUpdates / $limit));
+
+        $updates = $this->db->query($sql, $params);
 
         return require __DIR__ . '/../../public/views/student/enrollment-updates.php';
     }
@@ -449,7 +470,28 @@ class UserController {
             exit;
         }
 
-        $updates = $this->db->query('SELECT * FROM enrollmentUpdates ORDER BY created_at DESC');
+        $type = $_GET['type'] ?? '';
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $limit = 5; // 5 announcements per page
+        $offset = ($page - 1) * $limit;
+
+        $sql = 'SELECT * FROM enrollmentUpdates';
+        $countSql = 'SELECT COUNT(*) as total FROM enrollmentUpdates';
+        $params = [];
+
+        if ($type !== '') {
+            $sql .= ' WHERE status = ?';
+            $countSql .= ' WHERE status = ?';
+            $params[] = $type;
+        }
+
+        $sql .= ' ORDER BY created_at DESC LIMIT ' . (int)$limit . ' OFFSET ' . (int)$offset;
+
+        $totalResult = $this->db->queryOne($countSql, $params);
+        $totalUpdates = (int)($totalResult['total'] ?? 0);
+        $totalPages = max(1, ceil($totalUpdates / $limit));
+
+        $updates = $this->db->query($sql, $params);
         
         return require __DIR__ . '/../../public/views/admin/enrollment-updates.php';
     }

@@ -459,14 +459,59 @@ class ApiController {
         }
         
         try {
-            $admins = $this->db->query('
-                SELECT a.adminID AS id, a.adminCode AS admin_id, CONCAT(u.firstName, " ", u.lastName) AS name, 
+            $search = $_GET['search'] ?? '';
+            $role = $_GET['role'] ?? '';
+            $page = max(1, (int)($_GET['page'] ?? 1));
+            $limit = max(1, (int)($_GET['limit'] ?? 10));
+            $offset = ($page - 1) * $limit;
+
+            $whereParts = [];
+            $params = [];
+
+            if ($search !== '') {
+                $whereParts[] = '(u.firstName LIKE ? OR u.lastName LIKE ? OR u.email LIKE ? OR a.adminCode LIKE ? OR CONCAT(u.firstName, " ", u.lastName) LIKE ?)';
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+            }
+
+            if ($role !== '') {
+                $whereParts[] = 'a.role = ?';
+                $params[] = $role;
+            }
+
+            $whereClause = !empty($whereParts) ? 'WHERE ' . implode(' AND ', $whereParts) : '';
+
+            $countSql = "
+                SELECT COUNT(*) as total
+                FROM Admin a
+                JOIN User u ON a.userID = u.userID
+                $whereClause
+            ";
+            $countResult = $this->db->queryOne($countSql, $params);
+            $total = (int)($countResult['total'] ?? 0);
+            $totalPages = max(1, ceil($total / $limit));
+
+            $sql = "
+                SELECT a.adminID AS id, a.adminCode AS admin_id, CONCAT(u.firstName, ' ', u.lastName) AS name, 
                        u.email, a.role, u.status, u.createdAt AS created_at
                 FROM Admin a
                 JOIN User u ON a.userID = u.userID
+                $whereClause
                 ORDER BY a.createdAt DESC
-            ');
-            echo $this->response(true, 'Admins retrieved successfully', $admins, 200);
+                LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+
+            $admins = $this->db->query($sql, $params);
+
+            echo $this->response(true, 'Admins retrieved successfully', [
+                'list' => $admins,
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'totalPages' => $totalPages
+            ], 200);
         } catch (\Exception $e) {
             echo $this->response(false, 'Error fetching admins: ' . $e->getMessage(), null, 500);
         }
@@ -999,23 +1044,90 @@ class ApiController {
      */
     public function getStudentInterestData() {
         try {
-            // Aggregate interest counts per section
-            $interests = $this->db->query('
+            $search = $_GET['search'] ?? '';
+            $section = $_GET['section'] ?? '';
+            $demand = $_GET['demand'] ?? '';
+            $page = max(1, (int)($_GET['page'] ?? 1));
+            $limit = max(1, (int)($_GET['limit'] ?? 10));
+            $offset = ($page - 1) * $limit;
+
+            $whereParts = [];
+            $havingParts = [];
+            $params = [];
+
+            if ($search !== '') {
+                $whereParts[] = '(c.courseCode LIKE ? OR c.courseName LIKE ? OR s.sectionCode LIKE ?)';
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+                $params[] = "%$search%";
+            }
+
+            if ($section !== '') {
+                $whereParts[] = 's.sectionCode = ?';
+                $params[] = $section;
+            }
+
+            if ($demand !== '') {
+                if ($demand === 'High') {
+                    $havingParts[] = 'COUNT(pi.plannedItemID) > 20';
+                } elseif ($demand === 'Moderate') {
+                    $havingParts[] = 'COUNT(pi.plannedItemID) > 10 AND COUNT(pi.plannedItemID) <= 20';
+                } elseif ($demand === 'Low') {
+                    $havingParts[] = 'COUNT(pi.plannedItemID) <= 10';
+                }
+            }
+
+            $whereClause = !empty($whereParts) ? 'WHERE ' . implode(' AND ', $whereParts) : '';
+            $havingClause = !empty($havingParts) ? 'HAVING ' . implode(' AND ', $havingParts) : '';
+
+            $countSql = "
+                SELECT COUNT(*) as total FROM (
+                    SELECT s.sectionID
+                    FROM Section s
+                    JOIN Course c ON s.courseID = c.courseID
+                    LEFT JOIN PlannedItem pi ON s.sectionID = pi.sectionID
+                    $whereClause
+                    GROUP BY s.sectionID
+                    $havingClause
+                ) AS subquery
+            ";
+            $countResult = $this->db->queryOne($countSql, $params);
+            $total = (int)($countResult['total'] ?? 0);
+            $totalPages = max(1, ceil($total / $limit));
+
+            $sql = "
                 SELECT c.courseCode AS code, c.courseName AS name, s.sectionCode AS section,
                        COUNT(pi.plannedItemID) AS interest,
                        CASE 
-                           WHEN COUNT(pi.plannedItemID) > 20 THEN "High"
-                           WHEN COUNT(pi.plannedItemID) > 10 THEN "Moderate"
-                           ELSE "Low"
+                           WHEN COUNT(pi.plannedItemID) > 20 THEN 'High'
+                           WHEN COUNT(pi.plannedItemID) > 10 THEN 'Moderate'
+                           ELSE 'Low'
                        END AS demand
                 FROM Section s
                 JOIN Course c ON s.courseID = c.courseID
                 LEFT JOIN PlannedItem pi ON s.sectionID = pi.sectionID
+                $whereClause
                 GROUP BY s.sectionID
+                $havingClause
                 ORDER BY interest DESC
-            ');
+                LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
 
-            echo $this->response(true, 'Interest data retrieved', $interests, 200);
+            $interests = $this->db->query($sql, $params);
+
+            // Fetch distinct sectionCodes for the filter dropdown
+            $distinctSectionsResult = $this->db->query("
+                SELECT DISTINCT sectionCode FROM Section ORDER BY sectionCode ASC
+            ");
+            $sectionsList = array_column($distinctSectionsResult, 'sectionCode');
+
+            echo $this->response(true, 'Interest data retrieved', [
+                'list' => $interests,
+                'total' => $total,
+                'page' => $page,
+                'limit' => $limit,
+                'totalPages' => $totalPages,
+                'sectionsList' => $sectionsList
+            ], 200);
         } catch (\Exception $e) {
             echo $this->response(false, 'Error fetching interest data: ' . $e->getMessage(), null, 500);
         }
