@@ -22,6 +22,22 @@
                 <p>Stay informed about real-time section changes and announcements.</p>
             </div>
 
+            <div class="filters-container card" style="max-width: 800px; margin-bottom: 24px;">
+                <div class="card-body" style="padding: 16px 24px;">
+                    <form method="GET" action="" style="display: flex; gap: 20px; align-items: flex-end; width: 100%;">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                            <label>Filter Announcement Type</label>
+                            <select name="type" class="btn btn-outline" style="width: 100%; text-align: left; max-width: 250px;" onchange="this.form.submit()">
+                                <option value="">All Types</option>
+                                <option value="New" <?php echo ($type === 'New') ? 'selected' : ''; ?>>General News</option>
+                                <option value="Advisory" <?php echo ($type === 'Advisory') ? 'selected' : ''; ?>>Academic Advisory</option>
+                                <option value="Critical" <?php echo ($type === 'Critical') ? 'selected' : ''; ?>>Critical Alert</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
             <div class="updates-feed-container" style="max-width: 800px;">
                 <div class="card">
                     <div class="card-body" style="padding: 0;">
@@ -74,6 +90,36 @@
                             <?php endif; ?>
                         </div>
                     </div>
+                    <?php if ($totalPages > 1): ?>
+                        <div class="card-footer" style="padding: 16px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                            <span style="font-size: 0.85rem; color: var(--text-medium);">
+                                Showing <?php echo count($updates) > 0 ? ($offset + 1) : 0; ?> to <?php echo min($offset + $limit, $totalUpdates); ?> of <?php echo $totalUpdates; ?> entries
+                            </span>
+                            <div style="display: flex; gap: 8px;">
+                                <!-- Previous Button -->
+                                <a href="?type=<?php echo urlencode($type); ?>&page=<?php echo max(1, $page - 1); ?>" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; text-decoration: none; <?php echo ($page <= 1) ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </a>
+
+                                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                                    <?php if ($totalPages > 5 && abs($page - $i) > 2 && $i !== 1 && $i !== $totalPages): ?>
+                                        <?php if ($i === 2 || $i === $totalPages - 1): ?>
+                                            <span style="align-self: center; color: var(--text-medium);">...</span>
+                                        <?php endif; ?>
+                                        <?php continue; ?>
+                                    <?php endif; ?>
+                                    <a href="?type=<?php echo urlencode($type); ?>&page=<?php echo $i; ?>" class="btn <?php echo ($i === $page) ? 'btn-primary' : 'btn-outline'; ?>" style="padding: 6px 12px; font-size: 0.8rem; text-decoration: none;">
+                                        <?php echo $i; ?>
+                                    </a>
+                                <?php endfor; ?>
+
+                                <!-- Next Button -->
+                                <a href="?type=<?php echo urlencode($type); ?>&page=<?php echo min($totalPages, $page + 1); ?>" class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; text-decoration: none; <?php echo ($page >= $totalPages) ? 'pointer-events: none; opacity: 0.5;' : ''; ?>">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>

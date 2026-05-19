@@ -38,10 +38,10 @@
                 <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                     <div class="search-bar" style="width: 350px; background: #f8f9fa; border: 1px solid var(--border-color);">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" placeholder="Search by name, email, or admin ID...">
+                        <input type="text" id="search-input" placeholder="Search by name, email, or admin ID...">
                     </div>
                     <div style="display: flex; gap: 12px;">
-                        <select class="btn btn-outline" style="padding: 8px 16px; font-weight: 500;">
+                        <select id="filter-role" class="btn btn-outline" style="padding: 8px 16px; font-weight: 500;">
                             <option value="">All Roles</option>
                             <option value="Registrar">Registrar Admin</option>
                             <option value="Department">Department Admin</option>
@@ -67,6 +67,12 @@
                                 <!-- Loaded by JavaScript -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+                <div class="card-footer" style="padding: 16px 24px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
+                    <span id="pagination-info" style="font-size: 0.85rem; color: var(--text-medium);">Showing 0 to 0 of 0 entries</span>
+                    <div id="pagination-controls" style="display: flex; gap: 8px;">
+                        <!-- Rendered by JavaScript -->
                     </div>
                 </div>
             </div>
@@ -206,15 +212,29 @@
 
     <script>
         let adminList = [];
+        let currentPage = 1;
+        let limit = 10;
+        let totalPages = 1;
+        let totalRecords = 0;
 
         // Load admin list on page load
         function loadAdmins() {
-            fetch('/api/admin/list')
+            const search = document.getElementById('search-input').value;
+            const role = document.getElementById('filter-role').value;
+
+            const url = `/api/admin/list?search=${encodeURIComponent(search)}&role=${encodeURIComponent(role)}&page=${currentPage}&limit=${limit}`;
+
+            fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        adminList = data.data;
+                        adminList = data.data.list || [];
+                        currentPage = parseInt(data.data.page) || 1;
+                        totalPages = parseInt(data.data.totalPages) || 1;
+                        totalRecords = parseInt(data.data.total) || 0;
+
                         renderAdminTable();
+                        renderPagination();
                     }
                 })
                 .catch(error => console.error('Error loading admins:', error));
@@ -223,7 +243,12 @@
         function renderAdminTable() {
             const tbody = document.querySelector('.data-table tbody');
             tbody.innerHTML = '';
-            
+
+            if (adminList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: var(--text-medium);">No administrator accounts found.</td></tr>';
+                return;
+            }
+
             adminList.forEach(admin => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
@@ -253,6 +278,85 @@
                 tbody.appendChild(row);
             });
         }
+
+        function renderPagination() {
+            const info = document.getElementById('pagination-info');
+            const controls = document.getElementById('pagination-controls');
+
+            const start = totalRecords === 0 ? 0 : (currentPage - 1) * limit + 1;
+            const end = Math.min(currentPage * limit, totalRecords);
+            info.textContent = `Showing ${start} to ${end} of ${totalRecords} entries`;
+
+            controls.innerHTML = '';
+
+            // Previous Button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'btn btn-outline';
+            prevBtn.style.padding = '6px 12px';
+            prevBtn.style.fontSize = '0.8rem';
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    loadAdmins();
+                }
+            };
+            controls.appendChild(prevBtn);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                if (totalPages > 5 && Math.abs(currentPage - i) > 2 && i !== 1 && i !== totalPages) {
+                    if (i === 2 || i === totalPages - 1) {
+                        const dots = document.createElement('span');
+                        dots.textContent = '...';
+                        dots.style.alignSelf = 'center';
+                        dots.style.color = 'var(--text-medium)';
+                        controls.appendChild(dots);
+                    }
+                    continue;
+                }
+
+                const pageBtn = document.createElement('button');
+                pageBtn.className = i === currentPage ? 'btn btn-primary' : 'btn btn-outline';
+                pageBtn.style.padding = '6px 12px';
+                pageBtn.style.fontSize = '0.8rem';
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => {
+                    currentPage = i;
+                    loadAdmins();
+                };
+                controls.appendChild(pageBtn);
+            }
+
+            // Next Button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn btn-outline';
+            nextBtn.style.padding = '6px 12px';
+            nextBtn.style.fontSize = '0.8rem';
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    loadAdmins();
+                }
+            };
+            controls.appendChild(nextBtn);
+        }
+
+        // Setup filter event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('search-input').addEventListener('input', () => {
+                currentPage = 1;
+                loadAdmins();
+            });
+
+            document.getElementById('filter-role').addEventListener('change', () => {
+                currentPage = 1;
+                loadAdmins();
+            });
+        });
 
         function openModal(id) {
             document.getElementById(id).style.display = 'flex';
